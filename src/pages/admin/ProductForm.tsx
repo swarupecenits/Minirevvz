@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { ArrowLeft, Image as ImageIcon, X } from 'lucide-react';
+import { ArrowLeft, Image as ImageIcon, X, Loader } from 'lucide-react';
 import { useStore } from '../../lib/store';
 import { Button } from '../../components/ui/Button';
 import {
@@ -9,6 +9,7 @@ import {
   Category,
   AvailabilityStatus } from
 '../../lib/constants';
+import { uploadProductImage, createProduct, updateProductSupabase } from '../../lib/supabase';
 export function ProductForm() {
   const { id } = useParams();
   const navigate = useNavigate();
@@ -32,7 +33,9 @@ export function ProductForm() {
     isPremium: false
   });
   const [images, setImages] = useState<string[]>([]);
-  const [newImageUrl, setNewImageUrl] = useState('');
+  const [uploadingFiles, setUploadingFiles] = useState<File[]>([]);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [error, setError] = useState('');
   useEffect(() => {
     if (isEditing && existingProduct) {
       setFormData({
@@ -54,34 +57,102 @@ export function ProductForm() {
       setImages(existingProduct.images);
     }
   }, [isEditing, existingProduct]);
-  const handleAddImage = () => {
-    if (newImageUrl && !images.includes(newImageUrl)) {
-      setImages([...images, newImageUrl]);
-      setNewImageUrl('');
+  
+  const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = e.currentTarget.files;
+    if (files) {
+      setUploadingFiles(Array.from(files));
     }
   };
+
+  const handleUploadImages = async () => {
+    if (uploadingFiles.length === 0) return;
+    
+    try {
+      setError('');
+      const uploadedUrls: string[] = [];
+      
+      for (const file of uploadingFiles) {
+        const result = await uploadProductImage(file);
+        if (result.error) {
+          console.error('Upload error:', result.error);
+          setError(`Failed to upload ${file.name}: ${result.error.message || result.error}`);
+          return;
+        }
+        if (result.publicUrl) {
+          uploadedUrls.push(result.publicUrl);
+        }
+      }
+      
+      setImages([...images, ...uploadedUrls]);
+      setUploadingFiles([]);
+    } catch (err) {
+      console.error('Upload exception:', err);
+      setError(`Error uploading images: ${err instanceof Error ? err.message : 'Unknown error'}`);
+    }
+  };
+
   const handleRemoveImage = (index: number) => {
     setImages(images.filter((_, i) => i !== index));
   };
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    const productData = {
-      ...formData,
-      price: parseFloat(formData.price) || 0,
-      images:
-      images.length > 0 ?
-      images :
-      [
-      'https://images.unsplash.com/photo-1580273916550-e323be2ae537?auto=format&fit=crop&q=80&w=800']
 
-    };
-    if (isEditing && id) {
-      updateProduct(id, productData);
-    } else {
-      addProduct(productData);
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsSubmitting(true);
+    setError('');
+
+    if (images.length === 0) {
+      setError('Please add at least one image');
+      setIsSubmitting(false);
+      return;
     }
-    navigate('/admin/products');
+
+    try {
+      const productData = {
+        name: formData.name,
+        brand: formData.brand,
+        category: formData.category,
+        price: parseFloat(formData.price) || 0,
+        description: formData.description,
+        short_description: formData.shortDescription,
+        images,
+        availability: formData.availability,
+        is_premium: formData.isPremium,
+        scale: formData.scale || null,
+        series: formData.series || null,
+        year: formData.year || null,
+        packaging_condition: formData.packagingCondition || null,
+        featured: formData.featured,
+        is_new_arrival: formData.isNewArrival
+      };
+
+      if (isEditing && id) {
+        // Update in Supabase if available, fallback to local store
+        try {
+          await updateProductSupabase(id, productData);
+        } catch (err) {
+          console.warn('Supabase update failed, using local store:', err);
+        }
+        updateProduct(id, productData);
+      } else {
+        // Create in Supabase if available, fallback to local store
+        try {
+          await createProduct(productData);
+        } catch (err) {
+          console.warn('Supabase create failed, using local store:', err);
+        }
+        addProduct(productData);
+      }
+
+      navigate('/admin/products');
+    } catch (err) {
+      setError('Failed to save product. Please try again.');
+      console.error(err);
+    } finally {
+      setIsSubmitting(false);
+    }
   };
+
   const InputLabel = ({ children }: {children: React.ReactNode;}) =>
   <label className="block text-sm font-medium text-zinc-300 mb-2">
       {children}
@@ -92,6 +163,7 @@ export function ProductForm() {
       <div className="flex items-center gap-4">
         <button
           onClick={() => navigate('/admin/products')}
+          title="Go back to products list"
           className="p-2 text-zinc-400 hover:text-zinc-100 bg-white/5 rounded-xl transition-colors">
           
           <ArrowLeft className="w-5 h-5" />
@@ -104,6 +176,12 @@ export function ProductForm() {
       </div>
 
       <form onSubmit={handleSubmit} className="space-y-8">
+        {error && (
+          <div className="p-4 rounded-xl bg-red-500/10 border border-red-500/20 text-red-400 text-sm">
+            {error}
+          </div>
+        )}
+        
         {/* Basic Info */}
         <div className="glass-panel p-6 rounded-2xl space-y-6">
           <h2 className="text-xl font-display font-semibold border-b border-white/10 pb-4">
@@ -123,6 +201,8 @@ export function ProductForm() {
                   name: e.target.value
                 })
                 }
+                placeholder="e.g., Ferrari F40"
+                aria-label="Product Name"
                 className="w-full bg-zinc-900/50 border border-white/10 rounded-xl px-4 py-2 text-zinc-100 focus:ring-2 focus:ring-zinc-500" />
               
             </div>
@@ -138,6 +218,8 @@ export function ProductForm() {
                   brand: e.target.value
                 })
                 }
+                placeholder="e.g., Mattel"
+                aria-label="Brand"
                 className="w-full bg-zinc-900/50 border border-white/10 rounded-xl px-4 py-2 text-zinc-100 focus:ring-2 focus:ring-zinc-500" />
               
             </div>
@@ -151,6 +233,7 @@ export function ProductForm() {
                   category: e.target.value as Category
                 })
                 }
+                aria-label="Category"
                 className="w-full bg-zinc-900 border border-white/10 rounded-xl px-4 py-2 text-zinc-100 focus:ring-2 focus:ring-zinc-500">
                 
                 {CATEGORIES.map((c) =>
@@ -174,6 +257,8 @@ export function ProductForm() {
                   price: e.target.value
                 })
                 }
+                placeholder="0"
+                aria-label="Price"
                 className="w-full bg-zinc-900/50 border border-white/10 rounded-xl px-4 py-2 text-zinc-100 focus:ring-2 focus:ring-zinc-500" />
               
             </div>
@@ -187,6 +272,7 @@ export function ProductForm() {
                   availability: e.target.value as AvailabilityStatus
                 })
                 }
+                aria-label="Availability Status"
                 className="w-full bg-zinc-900 border border-white/10 rounded-xl px-4 py-2 text-zinc-100 focus:ring-2 focus:ring-zinc-500">
                 
                 {AVAILABILITY_STATUSES.map((s) =>
@@ -202,20 +288,55 @@ export function ProductForm() {
         {/* Images */}
         <div className="glass-panel p-6 rounded-2xl space-y-6">
           <h2 className="text-xl font-display font-semibold border-b border-white/10 pb-4">
-            Images
+            Product Images
           </h2>
 
-          <div className="flex gap-2">
-            <input
-              type="url"
-              placeholder="Paste image URL (e.g., Unsplash link)"
-              value={newImageUrl}
-              onChange={(e) => setNewImageUrl(e.target.value)}
-              className="flex-1 bg-zinc-900/50 border border-white/10 rounded-xl px-4 py-2 text-zinc-100 focus:ring-2 focus:ring-zinc-500" />
-            
-            <Button type="button" variant="secondary" onClick={handleAddImage}>
-              Add Image
-            </Button>
+          <div className="space-y-4">
+            <div className="border-2 border-dashed border-white/10 rounded-xl p-6">
+              <input
+                type="file"
+                multiple
+                accept="image/*"
+                onChange={handleFileSelect}
+                className="hidden"
+                id="imageInput"
+                aria-label="Select product images" />
+              
+              <label
+                htmlFor="imageInput"
+                className="flex flex-col items-center gap-3 cursor-pointer">
+                
+                <ImageIcon className="w-8 h-8 text-zinc-400" />
+                <div className="text-center">
+                  <p className="text-zinc-100 font-medium">
+                    Click to select images or drag and drop
+                  </p>
+                  <p className="text-sm text-zinc-400">
+                    PNG, JPG, WebP up to 10MB each
+                  </p>
+                </div>
+              </label>
+            </div>
+
+            {uploadingFiles.length > 0 && (
+              <div className="flex gap-2">
+                <Button
+                  type="button"
+                  title="Upload selected images to Supabase"
+                  variant="secondary"
+                  onClick={handleUploadImages}
+                  disabled={uploadingFiles.length === 0}>
+                  
+                  Upload {uploadingFiles.length} Image{uploadingFiles.length !== 1 ? 's' : ''}
+                </Button>
+                <Button
+                  type="button"
+                  variant="ghost"
+                  onClick={() => setUploadingFiles([])}>
+                  Clear
+                </Button>
+              </div>
+            )}
           </div>
 
           {images.length > 0 ?
@@ -232,7 +353,9 @@ export function ProductForm() {
               
                   <button
                 type="button"
+                title="Remove this image"
                 onClick={() => handleRemoveImage(idx)}
+                aria-label={`Remove image ${idx + 1}`}
                 className="absolute top-2 right-2 p-1.5 bg-red-500 text-white rounded-lg opacity-0 group-hover:opacity-100 transition-opacity">
                 
                     <X className="w-4 h-4" />
@@ -266,8 +389,9 @@ export function ProductForm() {
                 shortDescription: e.target.value
               })
               }
-              className="w-full bg-zinc-900/50 border border-white/10 rounded-xl px-4 py-2 text-zinc-100 focus:ring-2 focus:ring-zinc-500"
-              placeholder="A brief summary for the product card" />
+              placeholder="A brief summary for the product card"
+              aria-label="Short Description"
+              className="w-full bg-zinc-900/50 border border-white/10 rounded-xl px-4 py-2 text-zinc-100 focus:ring-2 focus:ring-zinc-500" />
             
           </div>
 
@@ -283,6 +407,8 @@ export function ProductForm() {
                 description: e.target.value
               })
               }
+              placeholder="Detailed description of the product"
+              aria-label="Detailed Description"
               className="w-full bg-zinc-900/50 border border-white/10 rounded-xl px-4 py-2 text-zinc-100 focus:ring-2 focus:ring-zinc-500" />
             
           </div>
@@ -299,6 +425,8 @@ export function ProductForm() {
                   scale: e.target.value
                 })
                 }
+                placeholder="e.g., 1:64"
+                aria-label="Scale"
                 className="w-full bg-zinc-900/50 border border-white/10 rounded-xl px-4 py-2 text-zinc-100 focus:ring-2 focus:ring-zinc-500" />
               
             </div>
@@ -313,6 +441,8 @@ export function ProductForm() {
                   series: e.target.value
                 })
                 }
+                placeholder="e.g., Hot Wheels Premium"
+                aria-label="Series"
                 className="w-full bg-zinc-900/50 border border-white/10 rounded-xl px-4 py-2 text-zinc-100 focus:ring-2 focus:ring-zinc-500" />
               
             </div>
@@ -327,6 +457,8 @@ export function ProductForm() {
                   year: e.target.value
                 })
                 }
+                placeholder="e.g., 2023"
+                aria-label="Year"
                 className="w-full bg-zinc-900/50 border border-white/10 rounded-xl px-4 py-2 text-zinc-100 focus:ring-2 focus:ring-zinc-500" />
               
             </div>
@@ -341,8 +473,9 @@ export function ProductForm() {
                   packagingCondition: e.target.value
                 })
                 }
-                className="w-full bg-zinc-900/50 border border-white/10 rounded-xl px-4 py-2 text-zinc-100 focus:ring-2 focus:ring-zinc-500"
-                placeholder="e.g., Mint on Card" />
+                placeholder="e.g., Mint on Card"
+                aria-label="Packaging Condition"
+                className="w-full bg-zinc-900/50 border border-white/10 rounded-xl px-4 py-2 text-zinc-100 focus:ring-2 focus:ring-zinc-500" />
               
             </div>
           </div>
@@ -406,11 +539,12 @@ export function ProductForm() {
           <Button
             type="button"
             variant="ghost"
-            onClick={() => navigate('/admin/products')}>
+            onClick={() => navigate('/admin/products')}
+            disabled={isSubmitting}>
             
             Cancel
           </Button>
-          <Button type="submit" size="lg">
+          <Button type="submit" size="lg" isLoading={isSubmitting}>
             {isEditing ? 'Save Changes' : 'Create Product'}
           </Button>
         </div>

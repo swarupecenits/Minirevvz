@@ -31,6 +31,7 @@ export interface Settings {
 export interface SellerAccount {
   email: string;
   password?: string; // Plaintext for prototype only
+  fullName?: string;
 }
 
 export interface Analytics {

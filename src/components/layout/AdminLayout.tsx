@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { Outlet, Link, useLocation, Navigate } from 'react-router-dom';
 import {
   LayoutDashboard,
@@ -11,7 +11,7 @@ import {
 'lucide-react';
 import { useStore } from '../../lib/store';
 import { BRAND_NAME } from '../../lib/constants';
-import logo from '../../assets/logo.jpeg';
+import logo from '../../assets/logo.png';
 export function AdminLayout() {
   const { seller, logout } = useStore();
   const location = useLocation();
@@ -70,8 +70,9 @@ export function AdminLayout() {
       </nav>
 
       <div className="p-4 border-t border-white/10">
-        <div className="px-4 py-3 mb-2 text-sm text-zinc-400 truncate">
-          {seller.email}
+        <div className="px-4 py-3 mb-3 bg-zinc-950/80 rounded-2xl">
+          <div className="text-sm font-medium text-white">{seller?.fullName || 'Admin'}</div>
+          <div className="text-xs text-zinc-500 truncate">{seller.email}</div>
         </div>
         <button
         onClick={logout}

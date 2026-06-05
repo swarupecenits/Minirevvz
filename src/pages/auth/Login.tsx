@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { useNavigate, Navigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { Eye, EyeOff, Lock } from 'lucide-react';
+import { signInAdmin } from '../../lib/supabase';
 import { useStore } from '../../lib/store';
 import { Button } from '../../components/ui/Button';
 import { BRAND_NAME } from '../../lib/constants';
@@ -11,7 +12,7 @@ export function Login() {
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
-  const { login, seller } = useStore();
+  const { login, seller, setSeller } = useStore();
   const navigate = useNavigate();
   if (seller) {
     return <Navigate to="/admin" replace />;
@@ -20,19 +21,41 @@ export function Login() {
     e.preventDefault();
     setError('');
     setIsLoading(true);
-    // Simulate network delay
-    await new Promise((resolve) => setTimeout(resolve, 800));
+
     if (!email || !password) {
       setError('Please enter both email and password.');
       setIsLoading(false);
       return;
     }
-    const success = login(email, password);
-    if (success) {
-      navigate('/admin');
-    } else {
-      setError('Invalid credentials.');
+
+    try {
+      const result = await signInAdmin(email, password);
+      if (result.error) {
+        setError(result.error.message || 'Unable to sign in.');
+        setIsLoading(false);
+        return;
+      }
+
+      const user = result.data.user;
+      if (user?.email) {
+        setSeller({
+          email: user.email,
+          fullName: user.user_metadata?.full_name || undefined
+        });
+        navigate('/admin');
+      } else {
+        // Fallback for simple prototype mode
+        const success = login(email, password);
+        if (success) {
+          navigate('/admin');
+        } else {
+          setError('Invalid credentials.');
+        }
+      }
+    } catch (error) {
+      setError('Login failed. Please check your credentials and try again.');
     }
+
     setIsLoading(false);
   };
   return (
@@ -121,7 +144,7 @@ export function Login() {
           </Button>
 
           <div className="text-center text-sm text-zinc-500 pt-4">
-            Prototype mode: Any email/password combination will work.
+            Seller Login Portal
           </div>
         </form>
       </motion.div>

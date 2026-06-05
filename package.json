@@ -11,6 +11,7 @@
   },
   "dependencies": {
     "@emotion/react": "^11.13.3",
+    "@supabase/supabase-js": "^2.107.0",
     "framer-motion": "^11.5.4",
     "lucide-react": "0.522.0",
     "ogl": "^1.0.11",

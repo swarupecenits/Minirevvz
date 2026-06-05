@@ -172,9 +172,7 @@ export function PublicLayout() {
             <p>
               © {new Date().getFullYear()} {BRAND_NAME}. All rights reserved.
             </p>
-            <Link to="/login" className="hover:text-zinc-300 transition-colors">
-              Seller Login
-            </Link>
+           
           </div>
         </div>
       </footer>
