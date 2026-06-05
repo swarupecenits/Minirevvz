@@ -125,6 +125,28 @@ export const seedProducts: Product[] = [
   createdAt: new Date(Date.now() - 345600000).toISOString()
 },
 {
+  id: 'prod-9',
+  name: 'Sale Bundle: Muscle Car Trio',
+  brand: 'Hot Wheels',
+  category: 'Sale',
+  price: 2999,
+  availability: 'Available',
+  images: [
+    'https://images.unsplash.com/photo-1532581140115-3e38f4fd89f3?auto=format&fit=crop&q=80&w=800'
+  ],
+  shortDescription: 'Limited time sale bundle with three muscle car classics.',
+  description:
+    'Tag this product as a Sale category item to appear automatically in the Sale Sets section. Includes three premium muscle car models at a discounted price.',
+  scale: '1:64',
+  series: 'Muscle Cars',
+  year: '2022',
+  packagingCondition: 'Mint in Box',
+  featured: false,
+  isNewArrival: false,
+  isPremium: false,
+  createdAt: new Date(Date.now() - 259200000).toISOString()
+},
+{
   id: 'prod-6',
   name: 'McLaren P1',
   brand: 'Bburago',

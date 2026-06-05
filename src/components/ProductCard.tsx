@@ -38,6 +38,7 @@ export function ProductCard({ product }: ProductCardProps) {
           className="object-cover w-full h-full transform group-hover:scale-105 transition-transform duration-700 ease-out" />
         
         <div className="absolute top-3 left-3 flex flex-col gap-2">
+          {product.category === 'Sale' && <Badge variant="sale">Sale</Badge>}
           {product.isPremium && <Badge variant="premium">Premium</Badge>}
           {product.isNewArrival && <Badge variant="success">New</Badge>}
         </div>

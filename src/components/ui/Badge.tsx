@@ -1,7 +1,7 @@
 import React from 'react';
 import { twMerge } from 'tailwind-merge';
 interface BadgeProps extends React.HTMLAttributes<HTMLDivElement> {
-  variant?: 'default' | 'success' | 'warning' | 'danger' | 'premium';
+  variant?: 'default' | 'success' | 'warning' | 'danger' | 'premium' | 'sale';
 }
 export function Badge({
   className,
@@ -17,7 +17,9 @@ export function Badge({
     warning: 'bg-amber-500/10 text-amber-400 border border-amber-500/20',
     danger: 'bg-red-500/10 text-red-400 border border-red-500/20',
     premium:
-    'bg-gradient-to-r from-amber-200/10 via-yellow-400/10 to-amber-500/10 text-amber-300 border border-amber-500/30'
+    'bg-gradient-to-r from-amber-200/10 via-yellow-400/10 to-amber-500/10 text-amber-300 border border-amber-500/30',
+    sale:
+    'bg-gradient-to-r from-fuchsia-500/15 via-rose-500/15 to-orange-500/15 text-rose-100 border border-rose-400/20 shadow-[0_0_18px_rgba(244,63,94,0.18)]'
   };
   return (
     <div

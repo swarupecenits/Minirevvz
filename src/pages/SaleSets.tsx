@@ -11,7 +11,7 @@ export function SaleSets() {
   const [sortBy, setSortBy] = useState<'newest' | 'price-asc' | 'price-desc'>('newest');
 
   const saleSets = useMemo(
-    () => products.filter((product) => product.category === 'Special Sets'),
+    () => products.filter((product) => product.category === 'Sale'),
     [products]
   );
 

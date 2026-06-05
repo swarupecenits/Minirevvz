@@ -6,6 +6,7 @@ export const CATEGORIES = [
 'CCA',
 'Premiums',
 'Special Sets',
+'Sale',
 'New Arrivals',
 'Limited Edition',
 ] as const;
@@ -15,7 +16,6 @@ export type Category = (typeof CATEGORIES)[number];
 export const CATEGORY_IMAGES: Record<Category, string> = {
 'Imported Hot Wheels':
 'https://res.cloudinary.com/dagggqd6g/image/upload/v1780693107/Imported_Hotwheels_tgxi6l.jpg',
-
 Bburago:
 'https://res.cloudinary.com/dagggqd6g/image/upload/v1780694050/bburago23_a44xix.jpg',
 
@@ -27,6 +27,9 @@ Premiums:
 
 'Special Sets':
 'https://res.cloudinary.com/dagggqd6g/image/upload/v1780693106/hot-wheels-8177051_1280_nzve64.jpg',
+
+'Sale':
+'https://res.cloudinary.com/dagggqd6g/image/upload/v1780698707/sale_ysgbem.avif',
 
 'New Arrivals':
 'https://res.cloudinary.com/dagggqd6g/image/upload/v1780693106/arrivals_f76xsf.webp',

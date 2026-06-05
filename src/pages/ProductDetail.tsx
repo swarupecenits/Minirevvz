@@ -126,10 +126,15 @@ export function ProductDetail() {
           className="flex flex-col">
           
           <div className="mb-6">
-            <div className="flex items-center justify-between mb-4">
-              <span className="text-sm font-medium text-zinc-400 tracking-wider uppercase">
-                {product.brand}
-              </span>
+            <div className="flex items-start justify-between mb-4 gap-4 flex-col sm:flex-row">
+              <div className="space-y-2">
+                <span className="text-sm font-medium text-zinc-400 tracking-wider uppercase">
+                  {product.brand}
+                </span>
+                {product.category === 'Sale' && (
+                  <Badge variant="sale">Flash Sale</Badge>
+                )}
+              </div>
               <Badge
                 variant={
                 product.availability === 'Available' ?
