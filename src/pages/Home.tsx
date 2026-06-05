@@ -58,7 +58,7 @@ export function Home() {
           <div className="absolute inset-0 pointer-events-none">
             <LightRays
               raysOrigin="top-center"
-              raysColor="#ffffff"
+              raysColor="#ffd166"
               raysSpeed={1}
               lightSpread={0.5}
               rayLength={3}
