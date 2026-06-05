@@ -51,9 +51,12 @@ export function Contact() {
             <MessageCircle className="w-8 h-8 text-[#25D366]" />
           </div>
           <h2 className="text-2xl font-display font-bold mb-4">Chat with Us</h2>
-          <p className="text-zinc-400 mb-8">
+          <p className="text-zinc-400 mb-2">
             The fastest way to reach us is directly through WhatsApp. We usually
             reply within a few hours.
+          </p>
+          <p className="text-zinc-300 font-medium mb-8">
+            WhatsApp: +91 96676 69383
           </p>
           <Button
             size="lg"

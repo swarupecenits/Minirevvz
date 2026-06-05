@@ -161,7 +161,7 @@ export function ProductForm() {
               </select>
             </div>
             <div>
-              <InputLabel>Price (USD) *</InputLabel>
+              <InputLabel>Price (INR) *</InputLabel>
               <input
                 required
                 type="number"

@@ -17,7 +17,7 @@ interface StoreContextType extends StoreState {
   trackWhatsAppClick: (productId: string) => void;
 }
 const StoreContext = createContext<StoreContextType | undefined>(undefined);
-const STORAGE_KEY = 'diecast_garage_store_v1';
+const STORAGE_KEY = 'minirevvz_store_v2';
 export function StoreProvider({ children }: {children: ReactNode;}) {
   const [state, setState] = useState<StoreState>(() => {
     const saved = localStorage.getItem(STORAGE_KEY);

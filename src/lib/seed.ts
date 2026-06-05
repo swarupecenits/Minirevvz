@@ -1,10 +1,10 @@
 import { Product, Settings } from './types';
 
 export const defaultSettings: Settings = {
-  whatsappNumber: '15551234567',
-  instagram: '@diecastgarage',
-  email: 'hello@diecastgarage.com',
-  location: 'Mumbai, India',
+  whatsappNumber: '+919667669383',
+  instagram: '@minirevvz',
+  email: 'tavishahuja07@gmail.com',
+  location: 'Delhi, India',
   businessHours: 'Mon–Sat, 10am–8pm'
 };
 
@@ -14,7 +14,7 @@ export const seedProducts: Product[] = [
   name: 'Nissan Skyline GT-R (R34) Nismo Z-Tune',
   brand: 'Hot Wheels Premium',
   category: 'Premiums',
-  price: 45,
+  price: 3499,
   availability: 'Available',
   images: [
   'https://images.unsplash.com/photo-1580273916550-e323be2ae537?auto=format&fit=crop&q=80&w=800',
@@ -38,7 +38,7 @@ export const seedProducts: Product[] = [
   name: 'Porsche 911 GT3 RS',
   brand: 'Bburago',
   category: 'Bburago',
-  price: 65,
+  price: 4999,
   availability: 'Limited Stock',
   images: [
   'https://images.unsplash.com/photo-1614200187524-dc4b892acf16?auto=format&fit=crop&q=80&w=800',
@@ -62,7 +62,7 @@ export const seedProducts: Product[] = [
   name: 'Ferrari F40 Competizione',
   brand: 'Hot Wheels',
   category: 'Imported Hot Wheels',
-  price: 120,
+  price: 9499,
   availability: 'Sold Out',
   images: [
   'https://images.unsplash.com/photo-1583121274602-3e2820c69888?auto=format&fit=crop&q=80&w=800'],
@@ -84,7 +84,7 @@ export const seedProducts: Product[] = [
   name: 'Lamborghini Countach LPI 800-4',
   brand: 'CCA',
   category: 'CCA',
-  price: 35,
+  price: 2499,
   availability: 'Available',
   images: [
   'https://images.unsplash.com/photo-1669023030485-573b6ac99761?auto=format&fit=crop&q=80&w=800'],
@@ -106,7 +106,7 @@ export const seedProducts: Product[] = [
   name: 'Fast & Furious 5-Car Set',
   brand: 'Hot Wheels',
   category: 'Special Sets',
-  price: 85,
+  price: 6499,
   availability: 'Available',
   images: [
   'https://images.unsplash.com/photo-1532581140115-3e38f4fd89f3?auto=format&fit=crop&q=80&w=800'],
@@ -129,7 +129,7 @@ export const seedProducts: Product[] = [
   name: 'McLaren P1',
   brand: 'Bburago',
   category: 'Bburago',
-  price: 55,
+  price: 4499,
   availability: 'Available',
   images: [
   'https://images.unsplash.com/photo-1620882814836-98a2bc9944ce?auto=format&fit=crop&q=80&w=800'],
@@ -151,7 +151,7 @@ export const seedProducts: Product[] = [
   name: 'Datsun Bluebird 510 Wagon',
   brand: 'Hot Wheels',
   category: 'Limited Edition',
-  price: 150,
+  price: 11999,
   availability: 'Limited Stock',
   images: [
   'https://images.unsplash.com/photo-1611821064430-0d40221e4e03?auto=format&fit=crop&q=80&w=800'],
@@ -173,7 +173,7 @@ export const seedProducts: Product[] = [
   name: 'Ford Mustang Shelby GT500',
   brand: 'CCA',
   category: 'CCA',
-  price: 40,
+  price: 2999,
   availability: 'Available',
   images: [
   'https://images.unsplash.com/photo-1584345604476-8ec5e12e42a5?auto=format&fit=crop&q=80&w=800'],

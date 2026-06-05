@@ -11,6 +11,7 @@ import {
 'lucide-react';
 import { useStore } from '../../lib/store';
 import { BRAND_NAME } from '../../lib/constants';
+import logo from '../../assets/logo.jpeg';
 export function AdminLayout() {
   const { seller, logout } = useStore();
   const location = useLocation();
@@ -42,16 +43,13 @@ export function AdminLayout() {
 
   const SidebarContent = () =>
   <>
-      <div className="p-6 border-b border-white/10">
+      <div className="p-6 border-b border-white/10 flex items-center min-h-[100px]">
         <Link
         to="/"
-        className="text-xl font-display font-bold text-zinc-100 flex items-center gap-2">
+        className="flex items-center gap-2">
         
-          <span className="text-gradient-silver">{BRAND_NAME}</span>
+          <img src={logo} alt={BRAND_NAME} className="h-16 w-auto object-contain mix-blend-screen scale-[1.5] origin-left" />
         </Link>
-        <div className="mt-2 text-xs text-zinc-500 uppercase tracking-wider font-semibold">
-          Seller Dashboard
-        </div>
       </div>
 
       <nav className="flex-1 p-4 space-y-2">

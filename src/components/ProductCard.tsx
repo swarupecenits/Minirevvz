@@ -70,7 +70,7 @@ export function ProductCard({ product }: ProductCardProps) {
 
         <div className="mt-auto flex items-center justify-between">
           <div className="text-xl font-display font-bold text-zinc-100">
-            ${product.price.toFixed(2)}
+            ₹{product.price.toLocaleString('en-IN')}
           </div>
         </div>
 

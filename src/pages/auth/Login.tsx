@@ -81,7 +81,7 @@ export function Login() {
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               className="w-full bg-zinc-900/50 border border-white/10 rounded-xl px-4 py-3 text-zinc-100 focus:outline-none focus:ring-2 focus:ring-zinc-500 transition-all"
-              placeholder="admin@diecastgarage.com" />
+              placeholder="admin@minirevvz.com" />
             
           </div>
 

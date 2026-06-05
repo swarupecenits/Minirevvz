@@ -1,11 +1,11 @@
-import React, { Children, Component } from 'react';
 import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { ArrowRight, Star, Shield, Zap } from 'lucide-react';
 import { Button } from '../components/ui/Button';
 import { ProductCard } from '../components/ProductCard';
+import LightRays from '../components/LightRays';
 import { useStore } from '../lib/store';
-import { CATEGORIES } from '../lib/constants';
+import { CATEGORIES, CATEGORY_IMAGES } from '../lib/constants';
 const fadeInUp = {
   initial: {
     opacity: 0,
@@ -50,12 +50,28 @@ export function Home() {
         {/* Background Image with Overlay */}
         <div className="absolute inset-0 z-0">
           <img
-            src="https://images.unsplash.com/photo-1580273916550-e323be2ae537?auto=format&fit=crop&q=80&w=2000"
+            src="https://res.cloudinary.com/dagggqd6g/image/upload/v1780694229/i-nyoman-adi-wiraputra-ADlbY5Vs9M0-unsplash_col4uh.jpg"
             alt="Premium Diecast"
             className="w-full h-full object-cover opacity-40" />
-          
+
           <div className="absolute inset-0 bg-gradient-to-b from-zinc-950/50 via-zinc-950/80 to-zinc-950"></div>
-        </div>
+          <div className="absolute inset-0 pointer-events-none">
+            <LightRays
+              raysOrigin="top-center"
+              raysColor="#ffffff"
+              raysSpeed={1}
+              lightSpread={0.5}
+              rayLength={3}
+              followMouse={true}
+              mouseInfluence={0.1}
+              noiseAmount={0}
+              distortion={0}
+              className="custom-rays"
+              pulsating={false}
+              fadeDistance={1}
+              saturation={1}
+            />
+          </div>        </div>
 
         <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
           <motion.div
@@ -71,7 +87,7 @@ export function Home() {
               duration: 0.8,
               ease: 'easeOut'
             }}>
-            
+
             <span className="inline-block py-1 px-3 rounded-full bg-white/10 border border-white/20 text-sm font-medium text-zinc-300 mb-6 backdrop-blur-md">
               The Ultimate Collector's Destination
             </span>
@@ -96,7 +112,7 @@ export function Home() {
                   variant="outline"
                   size="lg"
                   className="w-full sm:w-auto glass-panel">
-                  
+
                   View Premiums
                 </Button>
               </Link>
@@ -126,33 +142,48 @@ export function Home() {
               once: true
             }}
             className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-6">
-            
-            {CATEGORIES.map((category, idx) =>
-            <motion.div key={category} variants={fadeInUp}>
+
+            {CATEGORIES.map((category) => (
+              <motion.div key={category} variants={fadeInUp}>
                 <Link
-                to={`/products?category=${encodeURIComponent(category)}`}
-                className="group block relative aspect-square rounded-2xl overflow-hidden glass-panel">
-                
-                  <div className="absolute inset-0 bg-zinc-900">
-                    {/* Placeholder abstract gradient for category bg */}
-                    <div className="absolute inset-0 bg-gradient-to-br from-zinc-800 to-zinc-950 opacity-50 group-hover:scale-110 transition-transform duration-700" />
-                  </div>
-                  <div className="absolute inset-0 bg-gradient-to-t from-zinc-950 via-zinc-950/40 to-transparent" />
+                  to={`/products?category=${encodeURIComponent(category)}`}
+                  className="group block relative aspect-square rounded-2xl overflow-hidden glass-panel"
+                >
+                  {/* Category Image */} <img
+                    src={CATEGORY_IMAGES[category]}
+                    alt={category}
+                    className="absolute inset-0 w-full h-full object-cover opacity-70 group-hover:opacity-90 group-hover:scale-110 transition-all duration-700 ease-out"
+                  />
+
+                  
+                  {/* Dark overlay for premium look */}
+                  <div className="absolute inset-0 bg-gradient-to-t from-zinc-950 via-zinc-950/50 to-transparent" />
+
+                  {/* Soft shine hover effect */}
+                  <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500 bg-gradient-to-tr from-white/10 via-transparent to-transparent" />
+
+                  {/* Category Text */}
                   <div className="absolute inset-0 p-6 flex flex-col justify-end">
+                    <span className="text-xs uppercase tracking-[0.25em] text-zinc-400 mb-2">
+                      Explore
+                    </span>
+
                     <h3 className="text-lg md:text-xl font-display font-semibold text-zinc-100 group-hover:text-white transition-colors">
                       {category}
                     </h3>
                   </div>
                 </Link>
+                
+
               </motion.div>
-            )}
+            ))}
           </motion.div>
         </div>
       </section>
 
       {/* Featured Products */}
       {featuredProducts.length > 0 &&
-      <section className="py-24 bg-zinc-900/30 border-y border-white/5">
+        <section className="py-24 bg-zinc-900/30 border-y border-white/5">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="flex items-end justify-between mb-12">
               <motion.div {...fadeInUp}>
@@ -164,17 +195,17 @@ export function Home() {
                 </p>
               </motion.div>
               <Link
-              to="/products"
-              className="hidden md:flex items-center text-zinc-400 hover:text-zinc-100 transition-colors">
-              
+                to="/products"
+                className="hidden md:flex items-center text-zinc-400 hover:text-zinc-100 transition-colors">
+
                 View all <ArrowRight className="ml-2 w-4 h-4" />
               </Link>
             </div>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
               {featuredProducts.map((product) =>
-            <ProductCard key={product.id} product={product} />
-            )}
+                <ProductCard key={product.id} product={product} />
+              )}
             </div>
           </div>
         </section>
@@ -182,7 +213,7 @@ export function Home() {
 
       {/* New Arrivals */}
       {newArrivals.length > 0 &&
-      <section className="py-24 bg-zinc-950">
+        <section className="py-24 bg-zinc-950">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="flex items-end justify-between mb-12">
               <motion.div {...fadeInUp}>
@@ -197,8 +228,8 @@ export function Home() {
 
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
               {newArrivals.map((product) =>
-            <ProductCard key={product.id} product={product} />
-            )}
+                <ProductCard key={product.id} product={product} />
+              )}
             </div>
           </div>
         </section>
@@ -226,7 +257,7 @@ export function Home() {
               transition={{
                 delay: 0.1
               }}>
-              
+
               <div className="w-16 h-16 mx-auto bg-white/5 rounded-2xl flex items-center justify-center mb-6 border border-white/10">
                 <Shield className="w-8 h-8 text-emerald-400" />
               </div>
@@ -244,7 +275,7 @@ export function Home() {
               transition={{
                 delay: 0.2
               }}>
-              
+
               <div className="w-16 h-16 mx-auto bg-white/5 rounded-2xl flex items-center justify-center mb-6 border border-white/10">
                 <Zap className="w-8 h-8 text-blue-400" />
               </div>

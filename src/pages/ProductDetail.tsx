@@ -146,7 +146,7 @@ export function ProductDetail() {
               {product.name}
             </h1>
             <div className="text-3xl font-display font-bold text-zinc-100">
-              ${product.price.toFixed(2)}
+              ₹{product.price.toLocaleString('en-IN')}
             </div>
           </div>
 

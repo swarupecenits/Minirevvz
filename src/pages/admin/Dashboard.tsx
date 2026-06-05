@@ -115,7 +115,7 @@ export function Dashboard() {
                     {product.category}
                   </td>
                   <td className="px-6 py-4 text-zinc-200">
-                    ${product.price.toFixed(2)}
+                    ₹{product.price.toLocaleString('en-IN')}
                   </td>
                   <td className="px-6 py-4">
                     <Badge

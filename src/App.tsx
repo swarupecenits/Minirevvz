@@ -11,6 +11,7 @@ import { Products } from './pages/Products';
 import { ProductDetail } from './pages/ProductDetail';
 import { About } from './pages/About';
 import { Contact } from './pages/Contact';
+import { SaleSets } from './pages/SaleSets';
 // Auth & Admin Pages
 import { Login } from './pages/auth/Login';
 import { Dashboard } from './pages/admin/Dashboard';
@@ -27,6 +28,8 @@ function SEO() {
       title = `Product Details | ${BRAND_NAME}`;
     } else if (path === '/products') {
       title = `All Products | ${BRAND_NAME}`;
+    } else if (path === '/sale-sets') {
+      title = `Sale Sets | ${BRAND_NAME}`;
     } else if (path === '/about') {
       title = `About Us | ${BRAND_NAME}`;
     } else if (path === '/contact') {
@@ -50,6 +53,7 @@ export function App() {
           <Route element={<PublicLayout />}>
             <Route path="/" element={<Home />} />
             <Route path="/products" element={<Products />} />
+            <Route path="/sale-sets" element={<SaleSets />} />
             <Route path="/products/:id" element={<ProductDetail />} />
             <Route path="/about" element={<About />} />
             <Route path="/contact" element={<Contact />} />
