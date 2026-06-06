@@ -7,8 +7,8 @@ export const CATEGORIES = [
 'Premiums',
 'Special Sets',
 'Sale',
-'New Arrivals',
-'Limited Edition',
+'MatchBox',
+'PreOrders',
 ] as const;
 
 export type Category = (typeof CATEGORIES)[number];
@@ -31,10 +31,10 @@ Premiums:
 'Sale':
 'https://res.cloudinary.com/dagggqd6g/image/upload/v1780698707/sale_ysgbem.avif',
 
-'New Arrivals':
+'MatchBox':
 'https://res.cloudinary.com/dagggqd6g/image/upload/v1780693106/arrivals_f76xsf.webp',
 
-'Limited Edition':
+'PreOrders':
 'https://res.cloudinary.com/dagggqd6g/image/upload/v1780693106/mainline_vgf428.webp',
 };
 

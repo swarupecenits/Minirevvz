@@ -179,7 +179,7 @@ export const seedProducts: Product[] = [
   id: 'prod-7',
   name: 'Datsun Bluebird 510 Wagon',
   brand: 'Hot Wheels',
-  category: 'Limited Edition',
+  category: 'PreOrders',
   price: 11999,
   availability: 'Limited Stock',
   images: [

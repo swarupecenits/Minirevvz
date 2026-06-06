@@ -98,7 +98,7 @@ export function Products() {
             <div className="w-2.5 h-2.5 bg-zinc-950 rounded-sm" />
             }
             </div>
-            <span className="text-zinc-300">New Arrivals</span>
+            <span className="text-zinc-300">MatchBox</span>
           </label>
         </div>
       </div>

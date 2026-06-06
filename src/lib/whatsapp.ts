@@ -13,5 +13,5 @@ isSoldOut: boolean)
   if (isSoldOut) {
     return `Hi, I saw the ${productName} (${category}) is marked as Sold Out. Is there any chance it will be available again soon?`;
   }
-  return `Hi, I am interested in buying ${productName} from the ${category} collection. Is it available?`;
+  return `Hi, I want to buy ${productName} from the ${category} collection. Is it available?`;
 }

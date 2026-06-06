@@ -214,14 +214,14 @@ export function Home() {
         </section>
       }
 
-      {/* New Arrivals */}
+      {/* MatchBox */}
       {newArrivals.length > 0 &&
         <section className="py-24 bg-zinc-950">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="flex items-end justify-between mb-12">
               <motion.div {...fadeInUp}>
                 <h2 className="text-3xl md:text-4xl font-display font-bold mb-4">
-                  New Arrivals
+                  MatchBox
                 </h2>
                 <p className="text-zinc-400">
                   The latest additions to our garage.
