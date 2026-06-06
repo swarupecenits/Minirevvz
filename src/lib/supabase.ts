@@ -66,10 +66,28 @@ export async function uploadAdminAvatar(file: File) {
     .from(AVATAR_BUCKET)
     .getPublicUrl(data.path);
 
+  const publicUrl = urlData?.publicUrl ?? null;
+
+  // Verify public URL is accessible; if not, try creating a signed URL as a fallback
+  if (publicUrl) {
+    try {
+      const res = await fetch(publicUrl, { method: 'HEAD' });
+      if (res.ok) {
+        return { publicUrl, path: data.path, error };
+      }
+    } catch (e) {
+      // ignore and try signed URL
+    }
+  }
+
+  const { data: signedData, error: signErr } = await supabase.storage
+    .from(AVATAR_BUCKET)
+    .createSignedUrl(data.path, 60 * 60); // 1 hour
+
   return {
-    publicUrl: urlData?.publicUrl ?? null,
+    publicUrl: signedData?.signedUrl ?? publicUrl,
     path: data.path,
-    error
+    error: signErr || error
   };
 }
 
@@ -92,10 +110,27 @@ export async function uploadProductImage(file: File) {
     .from(PRODUCT_IMAGES_BUCKET)
     .getPublicUrl(data.path);
 
+  const publicUrl = urlData?.publicUrl ?? null;
+
+  if (publicUrl) {
+    try {
+      const res = await fetch(publicUrl, { method: 'HEAD' });
+      if (res.ok) {
+        return { publicUrl, path: data.path, error };
+      }
+    } catch (e) {
+      // ignore and try signed URL
+    }
+  }
+
+  const { data: signedData, error: signErr } = await supabase.storage
+    .from(PRODUCT_IMAGES_BUCKET)
+    .createSignedUrl(data.path, 60 * 60); // 1 hour
+
   return {
-    publicUrl: urlData?.publicUrl ?? null,
+    publicUrl: signedData?.signedUrl ?? publicUrl,
     path: data.path,
-    error
+    error: signErr || error
   };
 }
 
