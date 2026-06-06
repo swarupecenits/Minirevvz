@@ -9,7 +9,7 @@ interface StoreState {
   analytics: Analytics;
 }
 interface StoreContextType extends StoreState {
-  addProduct: (product: Omit<Product, 'id' | 'createdAt'>) => void;
+  addProduct: (product: Omit<Product, 'id' | 'createdAt'> | Product) => void;
   updateProduct: (id: string, product: Partial<Product>) => void;
   deleteProduct: (id: string) => void;
   updateSettings: (settings: Partial<Settings>) => void;
@@ -45,30 +45,10 @@ export function StoreProvider({ children }: {children: ReactNode;}) {
     const loadSupabaseProducts = async () => {
       try {
         const { data, error } = await fetchAllProducts();
-        if (!error && data && data.length > 0) {
-          // Convert snake_case from Supabase to camelCase
-          const convertedProducts: Product[] = data.map((p: any) => ({
-            id: p.id,
-            name: p.name,
-            brand: p.brand,
-            category: p.category,
-            price: p.price,
-            availability: p.availability,
-            images: p.images || [],
-            shortDescription: p.short_description,
-            description: p.description,
-            scale: p.scale,
-            series: p.series,
-            year: p.year,
-            packagingCondition: p.packaging_condition,
-            featured: p.featured || false,
-            isNewArrival: p.is_new_arrival || false,
-            isPremium: p.is_premium || false,
-            createdAt: p.created_at
-          }));
+        if (!error && data) {
           setState((prev) => ({
             ...prev,
-            products: convertedProducts.length > 0 ? convertedProducts : prev.products
+            products: data
           }));
         }
       } catch (err) {
@@ -82,12 +62,14 @@ export function StoreProvider({ children }: {children: ReactNode;}) {
   useEffect(() => {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
   }, [state]);
-  const addProduct = (productData: Omit<Product, 'id' | 'createdAt'>) => {
-    const newProduct: Product = {
-      ...productData,
-      id: `prod-${Date.now()}`,
-      createdAt: new Date().toISOString()
-    };
+  const addProduct = (productData: Omit<Product, 'id' | 'createdAt'> | Product) => {
+    const newProduct: Product = 'id' in productData && 'createdAt' in productData
+      ? productData
+      : {
+        ...productData,
+        id: `prod-${Date.now()}`,
+        createdAt: new Date().toISOString()
+      };
     setState((prev) => ({
       ...prev,
       products: [newProduct, ...prev.products]

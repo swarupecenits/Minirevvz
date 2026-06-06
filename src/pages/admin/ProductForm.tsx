@@ -9,7 +9,7 @@ import {
   Category,
   AvailabilityStatus } from
 '../../lib/constants';
-import { uploadProductImage, createProduct, updateProductSupabase } from '../../lib/supabase';
+import { uploadProductImage, createProduct, updateProductSupabase, ProductPayload } from '../../lib/supabase';
 export function ProductForm() {
   const { id } = useParams();
   const navigate = useNavigate();
@@ -108,7 +108,7 @@ export function ProductForm() {
     }
 
     try {
-      const productData = {
+      const productPayload: ProductPayload = {
         name: formData.name,
         brand: formData.brand,
         category: formData.category,
@@ -126,22 +126,57 @@ export function ProductForm() {
         is_new_arrival: formData.isNewArrival
       };
 
+      const localProductData = {
+        name: formData.name,
+        brand: formData.brand,
+        category: formData.category,
+        price: parseFloat(formData.price) || 0,
+        description: formData.description,
+        shortDescription: formData.shortDescription,
+        images,
+        availability: formData.availability,
+        isPremium: formData.isPremium,
+        scale: formData.scale || undefined,
+        series: formData.series || undefined,
+        year: formData.year || undefined,
+        packagingCondition: formData.packagingCondition || undefined,
+        featured: formData.featured,
+        isNewArrival: formData.isNewArrival
+      };
+
       if (isEditing && id) {
-        // Update in Supabase if available, fallback to local store
-        try {
-          await updateProductSupabase(id, productData);
-        } catch (err) {
-          console.warn('Supabase update failed, using local store:', err);
+        // Update in Supabase first, then update local store
+        const response = await updateProductSupabase(id, productPayload);
+        if (response.error) {
+          console.error('Supabase update failed:', response.error);
+          setError(`Failed to update product: ${response.error.message}`);
+          setIsSubmitting(false);
+          return;
         }
-        updateProduct(id, productData);
+        updateProduct(id, localProductData);
       } else {
         // Create in Supabase if available, fallback to local store
         try {
-          await createProduct(productData);
+          const response = await createProduct(productPayload);
+          if (response.error) {
+            console.error('Supabase create failed:', response.error);
+            setError(`Failed to save product: ${response.error.message}`);
+            setIsSubmitting(false);
+            return;
+          }
+          if (response.data && response.data[0]) {
+            addProduct({
+              ...localProductData,
+              id: response.data[0].id,
+              createdAt: response.data[0].created_at
+            });
+          } else {
+            addProduct(localProductData);
+          }
         } catch (err) {
           console.warn('Supabase create failed, using local store:', err);
+          addProduct(localProductData);
         }
-        addProduct(productData);
       }
 
       navigate('/admin/products');

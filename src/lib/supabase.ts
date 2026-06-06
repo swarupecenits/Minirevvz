@@ -1,5 +1,6 @@
 import { supabase } from './supabaseClient';
 import { Product } from './types';
+import { Category, AvailabilityStatus } from './constants';
 
 const AVATAR_BUCKET = import.meta.env.VITE_SUPABASE_STORAGE_BUCKET || 'avatars';
 const PRODUCT_IMAGES_BUCKET = import.meta.env.VITE_PRODUCT_IMAGES_BUCKET || 'product-images';
@@ -46,7 +47,7 @@ export async function fetchAdminProfile(email: string) {
 }
 
 export async function upsertAdminProfile(profile: AdminProfilePayload) {
-  return supabase.from('profiles').upsert(profile, { returning: 'representation' });
+  return supabase.from('profiles').upsert(profile);
 }
 
 export async function uploadAdminAvatar(file: File) {
@@ -134,16 +135,64 @@ export async function uploadProductImage(file: File) {
   };
 }
 
+function getStoragePathFromProductImageUrl(imageUrl: string) {
+  try {
+    const url = new URL(imageUrl);
+    const pathParts = url.pathname.split('/');
+    const bucketIndex = pathParts.findIndex((part) => part === PRODUCT_IMAGES_BUCKET);
+    if (bucketIndex >= 0) {
+      return pathParts.slice(bucketIndex + 1).join('/');
+    }
+    return null;
+  } catch {
+    return null;
+  }
+}
+
+export async function deleteProductImages(imageUrls: string[]) {
+  const paths = imageUrls
+    .map(getStoragePathFromProductImageUrl)
+    .filter((path): path is string => Boolean(path));
+
+  if (paths.length === 0) {
+    return { data: null, error: null };
+  }
+
+  return supabase.storage.from(PRODUCT_IMAGES_BUCKET).remove(paths);
+}
+
 export async function createProduct(product: ProductPayload) {
-  return supabase.from('products').insert([product]);
+  return supabase.from('products').insert([product]).select();
 }
 
 export async function updateProductSupabase(id: string, product: Partial<ProductPayload>) {
-  return supabase.from('products').update(product).eq('id', id);
+  return supabase.from('products').update(product).eq('id', id).select();
 }
 
 export async function deleteProductSupabase(id: string) {
   return supabase.from('products').delete().eq('id', id);
+}
+
+function mapProductRowToProduct(row: Record<string, unknown>): Product {
+  return {
+    id: String(row.id ?? ''),
+    name: String(row.name ?? ''),
+    brand: String(row.brand ?? ''),
+    category: String(row.category ?? '') as Category,
+    price: Number(row.price ?? 0),
+    availability: String(row.availability ?? '') as AvailabilityStatus,
+    images: (Array.isArray(row.images) ? (row.images as string[]) : []) || [],
+    shortDescription: String(row.short_description ?? row.shortDescription ?? ''),
+    description: String(row.description ?? ''),
+    scale: row.scale ? String(row.scale) : undefined,
+    series: row.series ? String(row.series) : undefined,
+    year: row.year ? String(row.year) : undefined,
+    packagingCondition: String(row.packaging_condition ?? row.packagingCondition ?? ''),
+    featured: Boolean(row.featured ?? false),
+    isNewArrival: Boolean(row.is_new_arrival ?? row.isNewArrival ?? false),
+    isPremium: Boolean(row.is_premium ?? row.isPremium ?? false),
+    createdAt: String(row.created_at ?? row.createdAt ?? new Date().toISOString())
+  };
 }
 
 export async function fetchAllProducts() {
@@ -151,7 +200,9 @@ export async function fetchAllProducts() {
     .from('products')
     .select('*')
     .order('created_at', { ascending: false });
-  return { data, error };
+
+  const products = data ? data.map(mapProductRowToProduct) : null;
+  return { data: products, error };
 }
 
 export async function fetchProductById(id: string) {
@@ -160,6 +211,7 @@ export async function fetchProductById(id: string) {
     .select('*')
     .eq('id', id)
     .single();
-  return { data, error };
+
+  return { data: data ? mapProductRowToProduct(data) : null, error };
 }
 

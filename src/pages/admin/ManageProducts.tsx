@@ -4,6 +4,7 @@ import { Plus, Search, Edit2, Trash2, MoreVertical } from 'lucide-react';
 import { useStore } from '../../lib/store';
 import { Button } from '../../components/ui/Button';
 import { Badge } from '../../components/ui/Badge';
+import { deleteProductSupabase, deleteProductImages } from '../../lib/supabase';
 export function ManageProducts() {
   const { products, deleteProduct } = useStore();
   const [search, setSearch] = useState('');
@@ -12,9 +13,31 @@ export function ManageProducts() {
     p.name.toLowerCase().includes(search.toLowerCase()) ||
     p.brand.toLowerCase().includes(search.toLowerCase())
   );
-  const handleDelete = (id: string) => {
-    if (window.confirm('Are you sure you want to delete this product?')) {
+  const handleDelete = async (id: string) => {
+    if (!window.confirm('Are you sure you want to delete this product?')) {
+      return;
+    }
+
+    const product = products.find((p) => p.id === id);
+    try {
+      if (product && product.images.length > 0) {
+        const { error: imageError } = await deleteProductImages(product.images);
+        if (imageError) {
+          console.warn('Failed to delete product images:', imageError);
+        }
+      }
+
+      const { error } = await deleteProductSupabase(id);
+      if (error) {
+        console.error('Supabase delete failed:', error);
+        window.alert('Failed to delete product from Supabase. Please try again.');
+        return;
+      }
+
       deleteProduct(id);
+    } catch (err) {
+      console.error('Error deleting product:', err);
+      window.alert('An unexpected error occurred while deleting the product.');
     }
   };
   return (
@@ -104,11 +127,14 @@ export function ManageProducts() {
                   <td className="px-6 py-4 text-right">
                     <div className="flex items-center justify-end gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
                       <Link to={`/admin/products/edit/${product.id}`}>
-                        <button className="p-2 text-zinc-400 hover:text-zinc-100 transition-colors rounded-lg hover:bg-white/10">
+                        <button
+                          aria-label="Edit product"
+                          className="p-2 text-zinc-400 hover:text-zinc-100 transition-colors rounded-lg hover:bg-white/10">
                           <Edit2 className="w-4 h-4" />
                         </button>
                       </Link>
                       <button
+                      aria-label="Delete product"
                       onClick={() => handleDelete(product.id)}
                       className="p-2 text-red-400 hover:text-red-300 transition-colors rounded-lg hover:bg-red-500/10">
                       
