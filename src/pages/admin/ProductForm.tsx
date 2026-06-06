@@ -123,7 +123,8 @@ export function ProductForm() {
         year: formData.year || null,
         packaging_condition: formData.packagingCondition || null,
         featured: formData.featured,
-        is_new_arrival: formData.isNewArrival
+        is_new_arrival: formData.isNewArrival,
+        ...(!isEditing ? { is_visible: false } : {})
       };
 
       const localProductData = {
@@ -141,7 +142,8 @@ export function ProductForm() {
         year: formData.year || undefined,
         packagingCondition: formData.packagingCondition || undefined,
         featured: formData.featured,
-        isNewArrival: formData.isNewArrival
+        isNewArrival: formData.isNewArrival,
+        isVisible: isEditing ? existingProduct?.isVisible === true : false
       };
 
       if (isEditing && id) {

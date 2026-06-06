@@ -1,18 +1,62 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { Plus, Search, Edit2, Trash2, MoreVertical } from 'lucide-react';
+import { Plus, Search, Edit2, Trash2, Eye, EyeOff } from 'lucide-react';
 import { useStore } from '../../lib/store';
 import { Button } from '../../components/ui/Button';
 import { Badge } from '../../components/ui/Badge';
-import { deleteProductSupabase, deleteProductImages } from '../../lib/supabase';
+import {
+  deleteProductSupabase,
+  deleteProductImages,
+  updateProductVisibility,
+  formatSupabaseError,
+  isMissingColumnError
+} from '../../lib/supabase';
+
 export function ManageProducts() {
-  const { products, deleteProduct } = useStore();
+  const { products, deleteProduct, setProductVisibility, clearVisibilityOverride } = useStore();
   const [search, setSearch] = useState('');
+  const [togglingId, setTogglingId] = useState<string | null>(null);
+
   const filteredProducts = products.filter(
     (p) =>
-    p.name.toLowerCase().includes(search.toLowerCase()) ||
-    p.brand.toLowerCase().includes(search.toLowerCase())
+      p.name.toLowerCase().includes(search.toLowerCase()) ||
+      p.brand.toLowerCase().includes(search.toLowerCase())
   );
+
+  const handleToggleVisibility = async (id: string, currentlyVisible: boolean) => {
+    const nextVisible = !currentlyVisible;
+    setTogglingId(id);
+    setProductVisibility(id, nextVisible);
+
+    try {
+      const { error } = await updateProductVisibility(id, nextVisible);
+      if (error) {
+        const message = formatSupabaseError(error);
+        console.error('Failed to update visibility:', message, error);
+
+        if (isMissingColumnError(error, 'is_visible')) {
+          console.warn(
+            'is_visible column missing in Supabase. Visibility saved locally. Run migration:',
+            'ALTER TABLE products ADD COLUMN IF NOT EXISTS is_visible BOOLEAN NOT NULL DEFAULT false;'
+          );
+          return;
+        }
+
+        setProductVisibility(id, currentlyVisible);
+        window.alert(`Failed to update product visibility: ${message}`);
+        return;
+      }
+
+      clearVisibilityOverride(id);
+    } catch (err) {
+      setProductVisibility(id, currentlyVisible);
+      console.error('Error toggling visibility:', err);
+      window.alert('An unexpected error occurred while updating visibility.');
+    } finally {
+      setTogglingId(null);
+    }
+  };
+
   const handleDelete = async (id: string) => {
     if (!window.confirm('Are you sure you want to delete this product?')) {
       return;
@@ -40,6 +84,7 @@ export function ManageProducts() {
       window.alert('An unexpected error occurred while deleting the product.');
     }
   };
+
   return (
     <div className="space-y-8">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
@@ -66,8 +111,8 @@ export function ManageProducts() {
               placeholder="Search products..."
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              className="w-full bg-zinc-900/50 border border-white/10 rounded-xl pl-10 pr-4 py-2 text-zinc-100 focus:outline-none focus:ring-2 focus:ring-zinc-500" />
-            
+              className="w-full bg-zinc-900/50 border border-white/10 rounded-xl pl-10 pr-4 py-2 text-zinc-100 focus:outline-none focus:ring-2 focus:ring-zinc-500"
+            />
           </div>
         </div>
 
@@ -79,85 +124,127 @@ export function ManageProducts() {
                 <th className="px-6 py-4 font-medium">Category</th>
                 <th className="px-6 py-4 font-medium">Price</th>
                 <th className="px-6 py-4 font-medium">Status</th>
+                <th className="px-6 py-4 font-medium">Public</th>
                 <th className="px-6 py-4 font-medium text-right">Actions</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-white/5">
-              {filteredProducts.map((product) =>
-              <tr
-                key={product.id}
-                className="hover:bg-white/5 transition-colors group">
-                
-                  <td className="px-6 py-4">
-                    <div className="flex items-center gap-3">
-                      <img
-                      src={product.images[0]}
-                      alt=""
-                      className="w-12 h-12 rounded-lg object-cover bg-zinc-800" />
-                    
-                      <div>
-                        <div className="font-medium text-zinc-200 line-clamp-1">
-                          {product.name}
-                        </div>
-                        <div className="text-xs text-zinc-500">
-                          {product.brand}
+              {filteredProducts.map((product) => {
+                const isVisible = product.isVisible === true;
+                const isToggling = togglingId === product.id;
+
+                return (
+                  <tr
+                    key={product.id}
+                    className="hover:bg-white/5 transition-colors group"
+                  >
+                    <td className="px-6 py-4">
+                      <div className="flex items-center gap-3">
+                        <img
+                          src={product.images[0]}
+                          alt=""
+                          className="w-12 h-12 rounded-lg object-cover bg-zinc-800"
+                        />
+                        <div>
+                          <div className="font-medium text-zinc-200 line-clamp-1">
+                            {product.name}
+                          </div>
+                          <div className="text-xs text-zinc-500">{product.brand}</div>
                         </div>
                       </div>
-                    </div>
-                  </td>
-                  <td className="px-6 py-4 text-zinc-400">
-                    {product.category}
-                  </td>
-                  <td className="px-6 py-4 text-zinc-200">
-                    ₹{product.price.toLocaleString('en-IN')}
-                  </td>
-                  <td className="px-6 py-4">
-                    <Badge
-                    variant={
-                    product.availability === 'Available' ?
-                    'success' :
-                    product.availability === 'Limited Stock' ?
-                    'warning' :
-                    'danger'
-                    }>
-                    
-                      {product.availability}
-                    </Badge>
-                  </td>
-                  <td className="px-6 py-4 text-right">
-                    <div className="flex items-center justify-end gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                      <Link to={`/admin/products/edit/${product.id}`}>
-                        <button
-                          aria-label="Edit product"
-                          className="p-2 text-zinc-400 hover:text-zinc-100 transition-colors rounded-lg hover:bg-white/10">
-                          <Edit2 className="w-4 h-4" />
-                        </button>
-                      </Link>
+                    </td>
+                    <td className="px-6 py-4 text-zinc-400">{product.category}</td>
+                    <td className="px-6 py-4 text-zinc-200">
+                      ₹{product.price.toLocaleString('en-IN')}
+                    </td>
+                    <td className="px-6 py-4">
+                      <Badge
+                        variant={
+                          product.availability === 'Available'
+                            ? 'success'
+                            : product.availability === 'Limited Stock'
+                              ? 'warning'
+                              : 'danger'
+                        }
+                      >
+                        {product.availability}
+                      </Badge>
+                    </td>
+                    <td className="px-6 py-4">
                       <button
-                      aria-label="Delete product"
-                      onClick={() => handleDelete(product.id)}
-                      className="p-2 text-red-400 hover:text-red-300 transition-colors rounded-lg hover:bg-red-500/10">
-                      
-                        <Trash2 className="w-4 h-4" />
+                        type="button"
+                        role="switch"
+                        aria-checked={isVisible}
+                        aria-label={
+                          isVisible
+                            ? `Hide ${product.name} from public website`
+                            : `Show ${product.name} on public website`
+                        }
+                        disabled={isToggling}
+                        onClick={() => handleToggleVisibility(product.id, isVisible)}
+                        className={`inline-flex items-center gap-2 rounded-full px-3 py-1.5 text-xs font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed ${
+                          isVisible
+                            ? 'bg-emerald-500/15 text-emerald-400 hover:bg-emerald-500/25'
+                            : 'bg-zinc-800 text-zinc-500 hover:bg-zinc-700'
+                        }`}
+                      >
+                        <span
+                          className={`relative inline-flex h-5 w-9 shrink-0 items-center rounded-full transition-colors ${
+                            isVisible ? 'bg-emerald-500' : 'bg-zinc-600'
+                          }`}
+                        >
+                          <span
+                            className={`inline-block h-3.5 w-3.5 transform rounded-full bg-white transition-transform ${
+                              isVisible ? 'translate-x-4' : 'translate-x-1'
+                            }`}
+                          />
+                        </span>
+                        {isVisible ? (
+                          <>
+                            <Eye className="w-3.5 h-3.5" />
+                            Visible
+                          </>
+                        ) : (
+                          <>
+                            <EyeOff className="w-3.5 h-3.5" />
+                            Hidden
+                          </>
+                        )}
                       </button>
-                    </div>
-                  </td>
-                </tr>
-              )}
-              {filteredProducts.length === 0 &&
-              <tr>
-                  <td
-                  colSpan={5}
-                  className="px-6 py-12 text-center text-zinc-500">
-                  
+                    </td>
+                    <td className="px-6 py-4 text-right">
+                      <div className="flex items-center justify-end gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                        <Link to={`/admin/products/edit/${product.id}`}>
+                          <button
+                            aria-label="Edit product"
+                            className="p-2 text-zinc-400 hover:text-zinc-100 transition-colors rounded-lg hover:bg-white/10"
+                          >
+                            <Edit2 className="w-4 h-4" />
+                          </button>
+                        </Link>
+                        <button
+                          aria-label="Delete product"
+                          onClick={() => handleDelete(product.id)}
+                          className="p-2 text-red-400 hover:text-red-300 transition-colors rounded-lg hover:bg-red-500/10"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                );
+              })}
+              {filteredProducts.length === 0 && (
+                <tr>
+                  <td colSpan={6} className="px-6 py-12 text-center text-zinc-500">
                     No products found matching your search.
                   </td>
                 </tr>
-              }
+              )}
             </tbody>
           </table>
         </div>
       </div>
-    </div>);
-
+    </div>
+  );
 }

@@ -31,6 +31,7 @@ export const seedProducts: Product[] = [
   featured: true,
   isNewArrival: true,
   isPremium: true,
+  isVisible: false,
   createdAt: new Date().toISOString()
 },
 {
@@ -55,6 +56,7 @@ export const seedProducts: Product[] = [
   featured: true,
   isNewArrival: false,
   isPremium: false,
+  isVisible: false,
   createdAt: new Date(Date.now() - 86400000).toISOString()
 },
 {
@@ -77,6 +79,7 @@ export const seedProducts: Product[] = [
   featured: false,
   isNewArrival: false,
   isPremium: true,
+  isVisible: false,
   createdAt: new Date(Date.now() - 172800000).toISOString()
 },
 {
@@ -99,6 +102,7 @@ export const seedProducts: Product[] = [
   featured: false,
   isNewArrival: true,
   isPremium: false,
+  isVisible: false,
   createdAt: new Date(Date.now() - 259200000).toISOString()
 },
 {
@@ -122,6 +126,7 @@ export const seedProducts: Product[] = [
   featured: true,
   isNewArrival: true,
   isPremium: true,
+  isVisible: false,
   createdAt: new Date(Date.now() - 345600000).toISOString()
 },
 {
@@ -144,6 +149,7 @@ export const seedProducts: Product[] = [
   featured: false,
   isNewArrival: false,
   isPremium: false,
+  isVisible: false,
   createdAt: new Date(Date.now() - 259200000).toISOString()
 },
 {
@@ -166,6 +172,7 @@ export const seedProducts: Product[] = [
   featured: false,
   isNewArrival: false,
   isPremium: false,
+  isVisible: false,
   createdAt: new Date(Date.now() - 432000000).toISOString()
 },
 {
@@ -188,6 +195,7 @@ export const seedProducts: Product[] = [
   featured: true,
   isNewArrival: false,
   isPremium: true,
+  isVisible: false,
   createdAt: new Date(Date.now() - 518400000).toISOString()
 },
 {
@@ -210,5 +218,6 @@ export const seedProducts: Product[] = [
   featured: false,
   isNewArrival: true,
   isPremium: false,
+  isVisible: false,
   createdAt: new Date(Date.now() - 604800000).toISOString()
 }];

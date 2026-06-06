@@ -1,14 +1,10 @@
 import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import {
-  MessageCircle,
-  ArrowLeft,
-  ShieldCheck,
-  Truck,
-  ChevronRight } from
-'lucide-react';
+import { ArrowLeft, ShieldCheck, Truck, ChevronRight } from 'lucide-react';
+import { WhatsAppIcon } from '../components/icons/WhatsAppIcon';
 import { useStore } from '../lib/store';
+import { isProductPublic } from '../lib/types';
 import { Button } from '../components/ui/Button';
 import { Badge } from '../components/ui/Badge';
 import { buildWhatsAppUrl, getProductEnquiryMessage } from '../lib/whatsapp';
@@ -16,7 +12,7 @@ export function ProductDetail() {
   const { id } = useParams();
   const navigate = useNavigate();
   const { products, settings, trackWhatsAppClick } = useStore();
-  const product = products.find((p) => p.id === id);
+  const product = products.find((p) => p.id === id && isProductPublic(p));
   const [activeImage, setActiveImage] = useState(0);
   useEffect(() => {
     window.scrollTo(0, 0);
@@ -77,40 +73,48 @@ export function ProductDetail() {
               opacity: 1,
               y: 0
             }}
-            className="aspect-[4/3] rounded-2xl overflow-hidden bg-zinc-900 border border-white/10 relative group">
-            
+            className="group relative aspect-square rounded-2xl overflow-hidden border border-white/10 bg-gradient-to-br from-zinc-800/40 via-zinc-900 to-zinc-950 shadow-[0_24px_48px_-16px_rgba(0,0,0,0.5)]"
+          >
+            <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_50%_40%,rgba(255,255,255,0.08)_0%,transparent_65%)]" />
+            <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500 bg-[radial-gradient(ellipse_at_50%_50%,rgba(255,209,102,0.06)_0%,transparent_70%)]" />
+
             <img
               src={
-              product.images[activeImage] ||
-              'https://images.unsplash.com/photo-1580273916550-e323be2ae537?auto=format&fit=crop&q=80&w=1200'
+                product.images[activeImage] ||
+                'https://images.unsplash.com/photo-1580273916550-e323be2ae537?auto=format&fit=crop&q=80&w=1200'
               }
               alt={product.name}
-              className="w-full h-full object-cover" />
-            
-            {product.isPremium &&
-            <div className="absolute top-4 left-4">
+              className="relative z-10 h-full w-full object-cover object-center transition-transform duration-700 group-hover:scale-[1.03]"
+            />
+
+            {product.isPremium && (
+              <div className="absolute top-4 left-4 z-20">
                 <Badge variant="premium">Premium Collection</Badge>
               </div>
-            }
+            )}
           </motion.div>
 
-          {product.images.length > 1 &&
-          <div className="grid grid-cols-4 gap-4">
-              {product.images.map((img, idx) =>
-            <button
-              key={idx}
-              onClick={() => setActiveImage(idx)}
-              className={`aspect-square rounded-xl overflow-hidden border-2 transition-all ${activeImage === idx ? 'border-zinc-100 opacity-100' : 'border-transparent opacity-50 hover:opacity-100'}`}>
-              
+          {product.images.length > 1 && (
+            <div className="grid grid-cols-4 sm:grid-cols-5 gap-3 sm:gap-4">
+              {product.images.map((img, idx) => (
+                <button
+                  key={idx}
+                  onClick={() => setActiveImage(idx)}
+                  className={`aspect-square rounded-xl overflow-hidden border-2 bg-zinc-900 transition-all ${
+                    activeImage === idx
+                      ? 'border-zinc-100 opacity-100 ring-2 ring-zinc-100/20'
+                      : 'border-white/10 opacity-60 hover:opacity-100 hover:border-white/25'
+                  }`}
+                >
                   <img
-                src={img}
-                alt={`${product.name} ${idx + 1}`}
-                className="w-full h-full object-cover" />
-              
+                    src={img}
+                    alt={`${product.name} ${idx + 1}`}
+                    className="h-full w-full object-cover object-center"
+                  />
                 </button>
-            )}
+              ))}
             </div>
-          }
+          )}
         </div>
 
         {/* Product Info */}
@@ -203,13 +207,19 @@ export function ProductDetail() {
             <Button
               size="lg"
               variant={isSoldOut ? 'outline' : 'whatsapp'}
-              className="w-full text-lg"
+              className="w-full gap-2 h-auto min-h-14 py-3 px-4 text-sm sm:text-base lg:text-lg leading-snug whitespace-normal text-center"
               onClick={handleWhatsAppClick}>
-              
-              <MessageCircle className="w-5 h-5 mr-2" />
-              {isSoldOut ?
-              'Ask for Availability on WhatsApp' :
-              'Buy on WhatsApp'}
+              <WhatsAppIcon className={`w-5 h-5 shrink-0 ${isSoldOut ? 'text-[#25D366]' : ''}`} />
+              <span>
+                {isSoldOut ? (
+                  <>
+                    <span className="sm:hidden">Ask on WhatsApp</span>
+                    <span className="hidden sm:inline">Ask for Availability on WhatsApp</span>
+                  </>
+                ) : (
+                  'Buy on WhatsApp'
+                )}
+              </span>
             </Button>
             <p className="text-center text-sm text-zinc-500">
               No payment required now. You will be redirected to WhatsApp to

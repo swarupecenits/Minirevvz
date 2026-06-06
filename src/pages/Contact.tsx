@@ -1,6 +1,7 @@
 import React from 'react';
 import { motion } from 'framer-motion';
-import { MessageCircle, Instagram, Mail, MapPin, Clock } from 'lucide-react';
+import { Instagram, Mail, MapPin, Clock } from 'lucide-react';
+import { WhatsAppIcon } from '../components/icons/WhatsAppIcon';
 import { useStore } from '../lib/store';
 import { Button } from '../components/ui/Button';
 import { buildWhatsAppUrl } from '../lib/whatsapp';
@@ -48,7 +49,7 @@ export function Contact() {
           className="glass-panel p-8 rounded-3xl flex flex-col justify-center items-center text-center">
           
           <div className="w-16 h-16 bg-[#25D366]/10 rounded-full flex items-center justify-center mb-6">
-            <MessageCircle className="w-8 h-8 text-[#25D366]" />
+            <WhatsAppIcon className="w-8 h-8 text-[#25D366]" />
           </div>
           <h2 className="text-2xl font-display font-bold mb-4">Chat with Us</h2>
           <p className="text-zinc-400 mb-2">
@@ -62,9 +63,8 @@ export function Contact() {
             size="lg"
             variant="whatsapp"
             onClick={handleWhatsAppClick}
-            className="w-full">
-            
-            <MessageCircle className="w-5 h-5 mr-2" />
+            className="w-full h-auto min-h-14 py-3 whitespace-normal text-center leading-snug">
+            <WhatsAppIcon className="w-5 h-5 shrink-0" />
             Message on WhatsApp
           </Button>
         </motion.div>

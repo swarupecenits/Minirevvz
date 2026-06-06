@@ -27,6 +27,7 @@ export interface ProductPayload {
   packaging_condition?: string;
   featured?: boolean;
   is_new_arrival?: boolean;
+  is_visible?: boolean;
 }
 
 export async function signInAdmin(email: string, password: string) {
@@ -169,6 +170,30 @@ export async function updateProductSupabase(id: string, product: Partial<Product
   return supabase.from('products').update(product).eq('id', id).select();
 }
 
+export async function updateProductVisibility(id: string, isVisible: boolean) {
+  return updateProductSupabase(id, { is_visible: isVisible });
+}
+
+type SupabaseErrorLike = {
+  message?: string;
+  details?: string;
+  hint?: string;
+  code?: string;
+};
+
+export function formatSupabaseError(error: SupabaseErrorLike): string {
+  return [error.message, error.details, error.hint].filter(Boolean).join(' ') || 'Unknown error';
+}
+
+export function isMissingColumnError(error: SupabaseErrorLike, column: string): boolean {
+  const message = error.message ?? '';
+  return (
+    error.code === 'PGRST204' ||
+    message.includes(column) ||
+    message.includes('schema cache')
+  );
+}
+
 export async function deleteProductSupabase(id: string) {
   return supabase.from('products').delete().eq('id', id);
 }
@@ -191,6 +216,7 @@ function mapProductRowToProduct(row: Record<string, unknown>): Product {
     featured: Boolean(row.featured ?? false),
     isNewArrival: Boolean(row.is_new_arrival ?? row.isNewArrival ?? false),
     isPremium: Boolean(row.is_premium ?? row.isPremium ?? false),
+    isVisible: row.is_visible === true || row.isVisible === true,
     createdAt: String(row.created_at ?? row.createdAt ?? new Date().toISOString())
   };
 }

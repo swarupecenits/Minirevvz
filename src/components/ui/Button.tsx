@@ -18,7 +18,7 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
   ref) =>
   {
     const baseStyles =
-    'inline-flex min-w-0 items-center justify-center rounded-xl font-medium transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-zinc-950 disabled:opacity-50 disabled:pointer-events-none';
+    'inline-flex min-w-0 items-center justify-center gap-2 rounded-xl font-medium transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-zinc-950 disabled:opacity-50 disabled:pointer-events-none';
     const variants = {
       primary:
       'bg-zinc-100 text-zinc-900 hover:bg-white hover:shadow-[0_0_20px_rgba(255,255,255,0.3)] focus:ring-zinc-100',

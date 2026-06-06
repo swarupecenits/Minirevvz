@@ -7,10 +7,35 @@ interface StoreState {
   settings: Settings;
   seller: SellerAccount | null;
   analytics: Analytics;
+  visibilityOverrides: Record<string, boolean>;
 }
+
+function resolveProductVisibility(
+  productId: string,
+  sourceVisible: boolean | undefined,
+  overrides: Record<string, boolean>
+): boolean {
+  if (overrides[productId] !== undefined) {
+    return overrides[productId];
+  }
+  return sourceVisible === true;
+}
+
+function withResolvedVisibility(
+  products: Product[],
+  overrides: Record<string, boolean>
+): Product[] {
+  return products.map((product) => ({
+    ...product,
+    isVisible: resolveProductVisibility(product.id, product.isVisible, overrides)
+  }));
+}
+
 interface StoreContextType extends StoreState {
   addProduct: (product: Omit<Product, 'id' | 'createdAt'> | Product) => void;
   updateProduct: (id: string, product: Partial<Product>) => void;
+  setProductVisibility: (id: string, isVisible: boolean) => void;
+  clearVisibilityOverride: (id: string) => void;
   deleteProduct: (id: string) => void;
   updateSettings: (settings: Partial<Settings>) => void;
   setSeller: (seller: SellerAccount | null) => void;
@@ -19,13 +44,32 @@ interface StoreContextType extends StoreState {
   trackWhatsAppClick: (productId: string) => void;
 }
 const StoreContext = createContext<StoreContextType | undefined>(undefined);
-const STORAGE_KEY = 'minirevvz_store_v2';
+const STORAGE_KEY = 'minirevvz_store_v3';
+const LEGACY_STORAGE_KEY = 'minirevvz_store_v2';
+
 export function StoreProvider({ children }: {children: ReactNode;}) {
   const [state, setState] = useState<StoreState>(() => {
-    const saved = localStorage.getItem(STORAGE_KEY);
+    const saved =
+      localStorage.getItem(STORAGE_KEY) ?? localStorage.getItem(LEGACY_STORAGE_KEY);
     if (saved) {
       try {
-        return JSON.parse(saved);
+        const parsed = JSON.parse(saved) as Partial<StoreState>;
+        const visibilityOverrides = parsed.visibilityOverrides ?? {};
+        const isLegacyStore = !localStorage.getItem(STORAGE_KEY);
+        const rawProducts = parsed.products ?? seedProducts;
+
+        return {
+          products: withResolvedVisibility(
+            isLegacyStore
+              ? rawProducts.map((product) => ({ ...product, isVisible: false }))
+              : rawProducts,
+            visibilityOverrides
+          ),
+          settings: parsed.settings ?? defaultSettings,
+          seller: parsed.seller ?? null,
+          analytics: parsed.analytics ?? { whatsappClicks: {} },
+          visibilityOverrides
+        };
       } catch (e) {
         console.error('Failed to parse store from localStorage', e);
       }
@@ -36,7 +80,8 @@ export function StoreProvider({ children }: {children: ReactNode;}) {
       seller: null,
       analytics: {
         whatsappClicks: {}
-      }
+      },
+      visibilityOverrides: {}
     };
   });
 
@@ -48,7 +93,7 @@ export function StoreProvider({ children }: {children: ReactNode;}) {
         if (!error && data) {
           setState((prev) => ({
             ...prev,
-            products: data
+            products: withResolvedVisibility(data, prev.visibilityOverrides)
           }));
         }
       } catch (err) {
@@ -64,11 +109,12 @@ export function StoreProvider({ children }: {children: ReactNode;}) {
   }, [state]);
   const addProduct = (productData: Omit<Product, 'id' | 'createdAt'> | Product) => {
     const newProduct: Product = 'id' in productData && 'createdAt' in productData
-      ? productData
+      ? { ...productData, isVisible: productData.isVisible === true }
       : {
         ...productData,
         id: `prod-${Date.now()}`,
-        createdAt: new Date().toISOString()
+        createdAt: new Date().toISOString(),
+        isVisible: productData.isVisible === true
       };
     setState((prev) => ({
       ...prev,
@@ -82,12 +128,17 @@ export function StoreProvider({ children }: {children: ReactNode;}) {
       products: prev.products.map((p) => {
         if (p.id === id) {
           // Handle both camelCase (from form) and snake_case (from Supabase)
-          const converted = {
+          const converted: Partial<Product> = {
             shortDescription: updates.short_description || updates.shortDescription,
             packagingCondition: updates.packaging_condition || updates.packagingCondition,
             isNewArrival: updates.is_new_arrival ?? updates.isNewArrival,
             isPremium: updates.is_premium ?? updates.isPremium
           };
+
+          if (updates.is_visible !== undefined || updates.isVisible !== undefined) {
+            converted.isVisible = (updates.is_visible ?? updates.isVisible) === true;
+          }
+
           return {
             ...p,
             ...updates,
@@ -98,11 +149,35 @@ export function StoreProvider({ children }: {children: ReactNode;}) {
       })
     }));
   };
-  const deleteProduct = (id: string) => {
+  const setProductVisibility = (id: string, isVisible: boolean) => {
     setState((prev) => ({
       ...prev,
-      products: prev.products.filter((p) => p.id !== id)
+      visibilityOverrides: {
+        ...prev.visibilityOverrides,
+        [id]: isVisible
+      },
+      products: prev.products.map((product) =>
+        product.id === id ? { ...product, isVisible } : product
+      )
     }));
+  };
+
+  const clearVisibilityOverride = (id: string) => {
+    setState((prev) => {
+      const { [id]: _, ...visibilityOverrides } = prev.visibilityOverrides;
+      return { ...prev, visibilityOverrides };
+    });
+  };
+
+  const deleteProduct = (id: string) => {
+    setState((prev) => {
+      const { [id]: _, ...visibilityOverrides } = prev.visibilityOverrides;
+      return {
+        ...prev,
+        visibilityOverrides,
+        products: prev.products.filter((p) => p.id !== id)
+      };
+    });
   };
   const updateSettings = (updates: Partial<Settings>) => {
     setState((prev) => ({
@@ -157,6 +232,8 @@ export function StoreProvider({ children }: {children: ReactNode;}) {
         ...state,
         addProduct,
         updateProduct,
+        setProductVisibility,
+        clearVisibilityOverride,
         deleteProduct,
         updateSettings,
         setSeller,

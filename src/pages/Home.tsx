@@ -1,10 +1,12 @@
 import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { ArrowRight, Star, Shield, Zap } from 'lucide-react';
+import { ArrowRight, Star, Shield } from 'lucide-react';
+import { WhatsAppIcon } from '../components/icons/WhatsAppIcon';
 import { Button } from '../components/ui/Button';
 import { ProductCard } from '../components/ProductCard';
 import LightRays from '../components/LightRays';
 import { useStore } from '../lib/store';
+import { isProductPublic } from '../lib/types';
 import { CATEGORIES, CATEGORY_IMAGES } from '../lib/constants';
 const fadeInUp = {
   initial: {
@@ -41,8 +43,9 @@ const staggerContainer = {
 };
 export function Home() {
   const { products } = useStore();
-  const featuredProducts = products.filter((p) => p.featured).slice(0, 4);
-  const newArrivals = products.filter((p) => p.isNewArrival).slice(0, 4);
+  const publicProducts = products.filter(isProductPublic);
+  const featuredProducts = publicProducts.filter((p) => p.featured).slice(0, 4);
+  const newArrivals = publicProducts.filter((p) => p.isNewArrival).slice(0, 4);
   return (
     <div className="flex flex-col min-h-screen">
       {/* Hero Section */}
@@ -92,14 +95,14 @@ export function Home() {
               The Ultimate Collector's Destination
             </span>
             <h1 className="text-4xl sm:text-5xl md:text-7xl font-display font-bold tracking-tighter text-zinc-100 mb-6 max-w-4xl mx-auto leading-tight">
-              Premium Diecast Collectibles, <br className="hidden md:block" />
+            Minirevvz Store <br className="hidden md:block" />
               <span className="text-gradient-silver">
-                Delivered to True Enthusiasts
+              Every miniature carries a story
               </span>
             </h1>
             <p className="text-base sm:text-lg md:text-xl text-zinc-400 mb-8 sm:mb-10 max-w-2xl mx-auto font-light">
               Explore imported Hot Wheels, Bburago, CCA, premiums, and exclusive
-              collectible sets curated for the passionate collector.
+              Every rev fuels a passion.
             </p>
             <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
               <Link to="/products" className="w-[90%] max-w-md sm:w-auto">
@@ -276,11 +279,11 @@ export function Home() {
                 delay: 0.2
               }}>
 
-              <div className="w-16 h-16 mx-auto bg-white/5 rounded-2xl flex items-center justify-center mb-6 border border-white/10">
-                <Zap className="w-8 h-8 text-blue-400" />
+              <div className="w-16 h-16 mx-auto bg-[#25D366]/10 rounded-2xl flex items-center justify-center mb-6 border border-[#25D366]/20">
+                <WhatsAppIcon className="w-8 h-8 text-[#25D366]" />
               </div>
               <h3 className="text-xl font-display font-semibold mb-3">
-                Direct Purchase
+                Buy on WhatsApp
               </h3>
               <p className="text-zinc-400">
                 No complicated checkouts. Enquire and buy directly via WhatsApp.

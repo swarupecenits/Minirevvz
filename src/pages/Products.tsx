@@ -3,6 +3,7 @@ import { useSearchParams } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { Filter, X, SlidersHorizontal } from 'lucide-react';
 import { useStore } from '../lib/store';
+import { isProductPublic } from '../lib/types';
 import { CATEGORIES, Category } from '../lib/constants';
 import { ProductCard } from '../components/ProductCard';
 import { Button } from '../components/ui/Button';
@@ -31,7 +32,7 @@ export function Products() {
     });
   }, [selectedCategory, searchParams, setSearchParams]);
   const filteredAndSortedProducts = useMemo(() => {
-    let result = [...products];
+    let result = products.filter(isProductPublic);
     if (selectedCategory !== 'All') {
       result = result.filter((p) => p.category === selectedCategory);
     }

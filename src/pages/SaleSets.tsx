@@ -2,6 +2,7 @@ import React, { useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { useStore } from '../lib/store';
+import { isProductPublic } from '../lib/types';
 import { ProductCard } from '../components/ProductCard';
 import { Button } from '../components/ui/Button';
 
@@ -11,7 +12,10 @@ export function SaleSets() {
   const [sortBy, setSortBy] = useState<'newest' | 'price-asc' | 'price-desc'>('newest');
 
   const saleSets = useMemo(
-    () => products.filter((product) => product.category === 'Sale'),
+    () =>
+      products.filter(
+        (product) => product.category === 'Sale' && isProductPublic(product)
+      ),
     [products]
   );
 

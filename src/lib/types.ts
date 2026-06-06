@@ -17,7 +17,12 @@ export interface Product {
   featured: boolean;
   isNewArrival: boolean;
   isPremium: boolean;
+  isVisible: boolean;
   createdAt: string;
+}
+
+export function isProductPublic(product: Product): boolean {
+  return product.isVisible === true;
 }
 
 export interface Settings {

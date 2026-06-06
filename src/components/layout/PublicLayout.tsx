@@ -3,7 +3,8 @@ import { Outlet, Link, useLocation } from 'react-router-dom';
 import { BRAND_NAME } from '../../lib/constants';
 import logo from '../../assets/logo.png';
 import { useStore } from '../../lib/store';
-import { MessageCircle, Menu, X, Instagram, Mail, MapPin } from 'lucide-react';
+import { Menu, X, Instagram, Mail, MapPin } from 'lucide-react';
+import { WhatsAppIcon } from '../icons/WhatsAppIcon';
 import { buildWhatsAppUrl } from '../../lib/whatsapp';
 export function PublicLayout() {
   const [isScrolled, setIsScrolled] = useState(false);
@@ -159,7 +160,8 @@ export function PublicLayout() {
                   <Mail className="w-4 h-4" /> {settings.email}
                 </li>
                 <li className="flex items-center gap-2">
-                  <MessageCircle className="w-4 h-4" /> {settings.whatsappNumber}
+                  <WhatsAppIcon className="w-4 h-4 text-[#25D366] shrink-0" />
+                  {settings.whatsappNumber}
                 </li>
                 <li className="flex items-center gap-2">
                   <Instagram className="w-4 h-4" /> {settings.instagram}
@@ -183,7 +185,7 @@ export function PublicLayout() {
         className="fixed bottom-6 right-6 z-50 bg-[#25D366] text-white p-4 rounded-full shadow-[0_0_20px_rgba(37,211,102,0.3)] hover:shadow-[0_0_30px_rgba(37,211,102,0.5)] hover:-translate-y-1 transition-all duration-300 group"
         aria-label="Contact on WhatsApp">
         
-        <MessageCircle className="w-6 h-6" />
+        <WhatsAppIcon className="w-6 h-6" />
         <span className="absolute right-full mr-4 top-1/2 -translate-y-1/2 bg-zinc-900 text-zinc-100 text-sm py-2 px-4 rounded-xl opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none border border-white/10">
           Chat with us
         </span>
