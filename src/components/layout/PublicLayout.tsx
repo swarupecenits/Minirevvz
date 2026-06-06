@@ -163,8 +163,16 @@ export function PublicLayout() {
                   <WhatsAppIcon className="w-4 h-4 text-[#25D366] shrink-0" />
                   {settings.whatsappNumber}
                 </li>
-                <li className="flex items-center gap-2">
-                  <Instagram className="w-4 h-4" /> {settings.instagram}
+                <li>
+                  <a
+                    href="https://www.instagram.com/minirevvz/"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center gap-2 text-zinc-400 hover:text-zinc-100 transition-colors"
+                  >
+                    <Instagram className="w-4 h-4 text-pink-500 shrink-0" />
+                    <span>@minirevvz</span>
+                  </a>
                 </li>
               </ul>
             </div>
