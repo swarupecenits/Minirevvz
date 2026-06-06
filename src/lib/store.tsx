@@ -2,6 +2,7 @@ import React, { useEffect, useState, createContext, useContext, ReactNode } from
 import { Product, Settings, SellerAccount, Analytics } from './types';
 import { seedProducts, defaultSettings } from './seed';
 import { fetchAllProducts } from './supabase';
+import { AppLoader } from '../components/AppLoader';
 interface StoreState {
   products: Product[];
   settings: Settings;
@@ -32,6 +33,7 @@ function withResolvedVisibility(
 }
 
 interface StoreContextType extends StoreState {
+  isInitializing: boolean;
   addProduct: (product: Omit<Product, 'id' | 'createdAt'> | Product) => void;
   updateProduct: (id: string, product: Partial<Product>) => void;
   setProductVisibility: (id: string, isVisible: boolean) => void;
@@ -47,7 +49,10 @@ const StoreContext = createContext<StoreContextType | undefined>(undefined);
 const STORAGE_KEY = 'minirevvz_store_v3';
 const LEGACY_STORAGE_KEY = 'minirevvz_store_v2';
 
+const MIN_LOADER_MS = 1400;
+
 export function StoreProvider({ children }: {children: ReactNode;}) {
+  const [isInitializing, setIsInitializing] = useState(true);
   const [state, setState] = useState<StoreState>(() => {
     const saved =
       localStorage.getItem(STORAGE_KEY) ?? localStorage.getItem(LEGACY_STORAGE_KEY);
@@ -87,6 +92,8 @@ export function StoreProvider({ children }: {children: ReactNode;}) {
 
   // Fetch products from Supabase on mount
   useEffect(() => {
+    const startedAt = Date.now();
+
     const loadSupabaseProducts = async () => {
       try {
         const { data, error } = await fetchAllProducts();
@@ -98,8 +105,13 @@ export function StoreProvider({ children }: {children: ReactNode;}) {
         }
       } catch (err) {
         console.warn('Failed to fetch products from Supabase, using local data:', err);
+      } finally {
+        const elapsed = Date.now() - startedAt;
+        const remaining = Math.max(0, MIN_LOADER_MS - elapsed);
+        window.setTimeout(() => setIsInitializing(false), remaining);
       }
     };
+
     loadSupabaseProducts();
   }, []);
 
@@ -230,6 +242,7 @@ export function StoreProvider({ children }: {children: ReactNode;}) {
     <StoreContext.Provider
       value={{
         ...state,
+        isInitializing,
         addProduct,
         updateProduct,
         setProductVisibility,
@@ -241,7 +254,7 @@ export function StoreProvider({ children }: {children: ReactNode;}) {
         logout,
         trackWhatsAppClick
       }}>
-      
+      <AppLoader isLoading={isInitializing} />
       {children}
     </StoreContext.Provider>);
 
