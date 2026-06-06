@@ -37,12 +37,12 @@ export function ProductCard({ product }: ProductCardProps) {
           alt={product.name}
           className="object-cover w-full h-full transform group-hover:scale-105 transition-transform duration-700 ease-out" />
         
-        <div className="absolute top-3 left-3 flex flex-col gap-2">
+        <div className="hidden sm:flex absolute top-3 left-3 flex-col gap-2">
           {product.category === 'Sale' && <Badge variant="sale">Sale</Badge>}
           {product.isPremium && <Badge variant="premium">Premium</Badge>}
           {product.isNewArrival && <Badge variant="success">New</Badge>}
         </div>
-        <div className="absolute top-3 right-3">
+        <div className="hidden sm:block absolute top-3 right-3">
           <Badge
             variant={
             product.availability === 'Available' ?
@@ -51,7 +51,6 @@ export function ProductCard({ product }: ProductCardProps) {
             'warning' :
             'danger'
             }>
-            
             {product.availability}
           </Badge>
         </div>
@@ -75,10 +74,10 @@ export function ProductCard({ product }: ProductCardProps) {
           </div>
         </div>
 
-        <div className="mt-4 flex gap-2">
+        <div className="mt-4 flex flex-col sm:flex-row gap-2">
           <Button
             variant="secondary"
-            className="flex-1"
+            className="flex-1 w-full"
             onClick={(e) => {
 
               // Let the Link handle navigation
@@ -87,9 +86,8 @@ export function ProductCard({ product }: ProductCardProps) {
           </Button>
           <Button
             variant={isSoldOut ? 'outline' : 'whatsapp'}
-            className="flex-1 px-0"
+            className="flex-1 w-full px-0"
             onClick={handleWhatsAppClick}>
-            
             <MessageCircle className="w-4 h-4 mr-2" />
             {isSoldOut ? 'Ask' : 'Buy'}
           </Button>
