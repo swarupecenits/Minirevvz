@@ -54,7 +54,7 @@ export function Home() {
             alt="Premium Diecast"
             className="w-full h-full object-cover opacity-40" />
 
-          <div className="absolute inset-0 bg-gradient-to-b from-zinc-950/50 via-zinc-950/80 to-zinc-950"></div>
+          <div className="absolute inset-0 bg-gradient-to-b from-zinc-950/30 via-zinc-950/60 to-zinc-950"></div>
           <div className="absolute inset-0 pointer-events-none">
             <LightRays
               raysOrigin="top-center"
@@ -73,7 +73,7 @@ export function Home() {
             />
           </div>        </div>
 
-        <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center pt-8 sm:pt-0">
+        <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center pt-16 sm:pt-12 lg:pt-0">
           <motion.div
             initial={{
               opacity: 0,
