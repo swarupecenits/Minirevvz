@@ -16,7 +16,7 @@ export function About() {
         className="text-center mb-16">
         
         <h1 className="text-4xl md:text-5xl font-display font-bold text-zinc-100 mb-6">
-          Driven by Passion. <br />
+          Minirevvz Store. <br />
           <span className="text-gradient-silver">Curated for Collectors.</span>
         </h1>
         <p className="text-lg text-zinc-400 leading-relaxed max-w-2xl mx-auto">
@@ -41,7 +41,7 @@ export function About() {
         className="aspect-video rounded-3xl overflow-hidden mb-16 border border-white/10 relative">
         
         <img
-          src="https://images.unsplash.com/photo-1580274455191-1c62238fa333?auto=format&fit=crop&q=80&w=1600"
+          src="https://res.cloudinary.com/dagggqd6g/image/upload/v1780693910/hero_img_lvkvzk.jpg"
           alt="Diecast Collection"
           className="w-full h-full object-cover" />
         
