@@ -1,6 +1,6 @@
 import React from 'react';
 import { motion } from 'framer-motion';
-import { Shield, Heart, Globe } from 'lucide-react';
+import { Shield, Heart, Globe, BookOpen } from 'lucide-react';
 export function About() {
   return (
     <div className="pt-32 pb-24 max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 min-h-screen">
@@ -127,6 +127,75 @@ export function About() {
           </p>
         </motion.div>
       </div>
+
+      {/* Collector Guidelines */}
+      <motion.div
+        initial={{
+          opacity: 0,
+          y: 20
+        }}
+        whileInView={{
+          opacity: 1,
+          y: 0
+        }}
+        viewport={{
+          once: true
+        }}
+        transition={{
+          delay: 0.3
+        }}
+        className="mt-20 glass-panel p-8 md:p-10 rounded-2xl border border-white/10">
+        
+        <div className="flex items-center gap-3 mb-8">
+          <BookOpen className="w-7 h-7 text-amber-400" />
+          <h2 className="text-2xl md:text-3xl font-display font-bold text-zinc-100">
+            Collector Guidelines
+          </h2>
+        </div>
+
+        <div className="space-y-4">
+          <div className="flex items-start gap-3">
+            <span className="text-amber-400 mt-0.5 shrink-0">🔸</span>
+            <p className="text-zinc-300">Claim fast, collect smart once a model is taken, it won't return.</p>
+          </div>
+          <div className="flex items-start gap-3">
+            <span className="text-amber-400 mt-0.5 shrink-0">🔸</span>
+            <p className="text-zinc-300">All prices are exclusive of shipping (varies by location).</p>
+          </div>
+          <div className="flex items-start gap-3">
+            <span className="text-amber-400 mt-0.5 shrink-0">🔸</span>
+            <p className="text-zinc-300">Check card & car condition before confirming your pick.</p>
+          </div>
+          <div className="flex items-start gap-3">
+            <span className="text-amber-400 mt-0.5 shrink-0">🔸</span>
+            <p className="text-zinc-300">Delivering Worldwide </p>
+          </div>
+          <div className="flex items-start gap-3">
+            <span className="text-amber-400 mt-0.5 shrink-0">🔸</span>
+            <p className="text-zinc-300">Shipping begins after full payment.</p>
+          </div>
+          <div className="flex items-start gap-3">
+            <span className="text-amber-400 mt-0.5 shrink-0">🔸</span>
+            <p className="text-zinc-300">Tracking details will be shared post-dispatch.</p>
+          </div>
+          <div className="flex items-start gap-3">
+            <span className="text-amber-400 mt-0.5 shrink-0">🔸</span>
+            <p className="text-zinc-300">No refunds / no replacements collector standards apply.</p>
+          </div>
+          <div className="flex items-start gap-3">
+            <span className="text-amber-400 mt-0.5 shrink-0">🔸</span>
+            <p className="text-zinc-300">Transit damage or loss is not covered.</p>
+          </div>
+          <div className="flex items-start gap-3">
+            <span className="text-amber-400 mt-0.5 shrink-0">🔸</span>
+            <p className="text-zinc-300">No cancellation once your order is locked in.</p>
+          </div>
+          <div className="flex items-start gap-3">
+            <span className="text-amber-400 mt-0.5 shrink-0">🔸</span>
+            <p className="text-zinc-300">COD not available prepaid only for smooth service.</p>
+          </div>
+        </div>
+      </motion.div>
     </div>);
 
 }

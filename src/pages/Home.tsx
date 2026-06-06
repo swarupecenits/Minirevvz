@@ -94,10 +94,10 @@ export function Home() {
             <span className="inline-block py-1 px-3 rounded-full bg-white/10 border border-white/20 text-sm font-medium text-zinc-300 mb-6 backdrop-blur-md">
               The Ultimate Collector's Destination
             </span>
-            <h1 className="text-4xl sm:text-5xl md:text-7xl font-display font-bold tracking-tighter text-zinc-100 mb-6 max-w-4xl mx-auto leading-tight">
-            Minirevvz Store <br className="hidden md:block" />
-              <span className="text-gradient-silver">
-              Every miniature carries a story
+            <h1 className="text-4xl sm:text-5xl md:text-6xl font-display font-bold tracking-tighter text-zinc-100 mb-6 max-w-4xl mx-auto leading-tight">
+            Every miniature carries a story<br className="hidden md:block" />
+              <span className="text-gradient-silver block mt-1 md:mt-3">
+              Every rev fuels a passion
               </span>
             </h1>
             <p className="text-base sm:text-lg md:text-xl text-zinc-400 mb-8 sm:mb-10 max-w-2xl mx-auto font-light">
