@@ -147,7 +147,7 @@ export function ProductDetail() {
                 {product.availability}
               </Badge>
             </div>
-            <h1 className="text-3xl md:text-4xl font-display font-bold text-zinc-100 mb-4 leading-tight">
+            <h1 className="text-2xl sm:text-3xl md:text-4xl font-display font-bold text-zinc-100 mb-4 leading-tight">
               {product.name}
             </h1>
             <div className="text-3xl font-display font-bold text-zinc-100">

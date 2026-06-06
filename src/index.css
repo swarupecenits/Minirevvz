@@ -16,6 +16,18 @@
     @apply font-display tracking-tight;
   }
 }
+
+/* Responsive base font-size tweaks for improved mobile readability */
+@layer base {
+  html {
+    font-size: 15px;
+  }
+  @media (min-width: 640px) {
+    html {
+      font-size: 16px;
+    }
+  }
+}
 @layer utilities {
   .glass-panel {
     @apply bg-white/5 backdrop-blur-md border border-white/10 shadow-xl;

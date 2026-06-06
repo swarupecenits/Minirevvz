@@ -107,7 +107,7 @@ export function Products() {
     <div className="pt-24 pb-24 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 min-h-screen">
       <div className="flex flex-col md:flex-row md:items-end justify-between mb-12 gap-6">
         <div>
-          <h1 className="text-4xl font-display font-bold text-zinc-100 mb-2">
+          <h1 className="text-3xl sm:text-4xl font-display font-bold text-zinc-100 mb-2">
             {selectedCategory === 'All' ? 'All Products' : selectedCategory}
           </h1>
           <p className="text-zinc-400">
@@ -187,7 +187,7 @@ export function Products() {
           {filteredAndSortedProducts.length > 0 ?
           <motion.div
             layout
-            className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+            className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 px-2 sm:px-0">
             
               {filteredAndSortedProducts.map((product) =>
             <motion.div

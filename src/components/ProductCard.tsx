@@ -57,11 +57,11 @@ export function ProductCard({ product }: ProductCardProps) {
         </div>
       </div>
 
-      <div className="p-5 flex flex-col flex-grow">
+      <div className="p-4 sm:p-5 flex flex-col flex-grow gap-2">
         <div className="text-xs text-zinc-400 mb-1 font-medium tracking-wider uppercase">
           {product.brand} • {product.category}
         </div>
-        <h3 className="text-lg font-display font-semibold text-zinc-100 mb-2 line-clamp-2">
+        <h3 className="text-base sm:text-lg font-display font-semibold text-zinc-100 mb-2 line-clamp-2">
           {product.name}
         </h3>
 
@@ -70,7 +70,7 @@ export function ProductCard({ product }: ProductCardProps) {
         </div>
 
         <div className="mt-auto flex items-center justify-between">
-          <div className="text-xl font-display font-bold text-zinc-100">
+          <div className="text-lg sm:text-xl font-display font-bold text-zinc-100">
             ₹{product.price.toLocaleString('en-IN')}
           </div>
         </div>

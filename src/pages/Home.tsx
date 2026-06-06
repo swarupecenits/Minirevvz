@@ -46,7 +46,7 @@ export function Home() {
   return (
     <div className="flex flex-col min-h-screen">
       {/* Hero Section */}
-      <section className="relative min-h-[90vh] flex items-center justify-center overflow-hidden pt-20">
+      <section className="relative min-h-[60vh] sm:min-h-[90vh] flex items-center justify-center overflow-hidden pt-20">
         {/* Background Image with Overlay */}
         <div className="absolute inset-0 z-0">
           <img
@@ -73,7 +73,7 @@ export function Home() {
             />
           </div>        </div>
 
-        <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+        <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center pt-8 sm:pt-0">
           <motion.div
             initial={{
               opacity: 0,
@@ -91,27 +91,27 @@ export function Home() {
             <span className="inline-block py-1 px-3 rounded-full bg-white/10 border border-white/20 text-sm font-medium text-zinc-300 mb-6 backdrop-blur-md">
               The Ultimate Collector's Destination
             </span>
-            <h1 className="text-5xl md:text-7xl font-display font-bold tracking-tighter text-zinc-100 mb-6 max-w-4xl mx-auto leading-tight">
+            <h1 className="text-4xl sm:text-5xl md:text-7xl font-display font-bold tracking-tighter text-zinc-100 mb-6 max-w-4xl mx-auto leading-tight">
               Premium Diecast Collectibles, <br className="hidden md:block" />
               <span className="text-gradient-silver">
                 Delivered to True Enthusiasts
               </span>
             </h1>
-            <p className="text-lg md:text-xl text-zinc-400 mb-10 max-w-2xl mx-auto font-light">
+            <p className="text-base sm:text-lg md:text-xl text-zinc-400 mb-8 sm:mb-10 max-w-2xl mx-auto font-light">
               Explore imported Hot Wheels, Bburago, CCA, premiums, and exclusive
               collectible sets curated for the passionate collector.
             </p>
             <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
-              <Link to="/products">
-                <Button size="lg" className="w-full sm:w-auto">
+              <Link to="/products" className="w-[90%] max-w-md sm:w-auto">
+                <Button size="lg" className="sm:w-52 md:w-auto h-12 sm:h-14 px-4 sm:px-8 text-base sm:text-lg">
                   Explore Collection <ArrowRight className="ml-2 w-5 h-5" />
                 </Button>
               </Link>
-              <Link to="/products?category=Premiums">
+              <Link to="/products?category=Premiums" className="w-[90%] max-w-md sm:w-auto">
                 <Button
                   variant="outline"
                   size="lg"
-                  className="w-full sm:w-auto glass-panel">
+                  className="sm:w-52 md:w-auto h-12 sm:h-14 px-4 sm:px-8 text-base sm:text-lg glass-panel">
 
                   View Premiums
                 </Button>
@@ -163,8 +163,8 @@ export function Home() {
                   <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500 bg-gradient-to-tr from-white/10 via-transparent to-transparent" />
 
                   {/* Category Text */}
-                  <div className="absolute inset-0 p-6 flex flex-col justify-end">
-                    <span className="text-xs uppercase tracking-[0.25em] text-zinc-400 mb-2">
+                  <div className="absolute inset-0 p-4 sm:p-6 flex flex-col justify-end">
+                    <span className="text-xs uppercase tracking-[0.2em] text-zinc-400 mb-2">
                       Explore
                     </span>
 
@@ -202,7 +202,7 @@ export function Home() {
               </Link>
             </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 px-2 sm:px-0">
               {featuredProducts.map((product) =>
                 <ProductCard key={product.id} product={product} />
               )}
@@ -226,7 +226,7 @@ export function Home() {
               </motion.div>
             </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 px-2 sm:px-0">
               {newArrivals.map((product) =>
                 <ProductCard key={product.id} product={product} />
               )}
