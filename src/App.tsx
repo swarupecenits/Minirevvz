@@ -2,6 +2,7 @@ import React, { useEffect, Component } from 'react';
 import { BrowserRouter, Routes, Route, useLocation } from 'react-router-dom';
 import { StoreProvider } from './lib/store';
 import { BRAND_NAME } from './lib/constants';
+import { pingSupabase } from './lib/supabase';
 // Layouts
 import { PublicLayout } from './components/layout/PublicLayout';
 import { AdminLayout } from './components/layout/AdminLayout';
@@ -44,6 +45,9 @@ function SEO() {
   return null;
 }
 export function App() {
+  useEffect(() => {
+    pingSupabase();
+  }, []);
   return (
     <StoreProvider>
       <BrowserRouter>

@@ -241,3 +241,23 @@ export async function fetchProductById(id: string) {
   return { data: data ? mapProductRowToProduct(data) : null, error };
 }
 
+export async function pingSupabase() {
+  try {
+    const { data, error } = await supabase
+      .from('products')
+      .select('id')
+      .limit(1);
+
+    if (error) {
+      console.error('Supabase ping failed:', error.message);
+      return { success: false, error };
+    }
+
+    console.log('Supabase ping successful');
+    return { success: true, data };
+  } catch (error) {
+    console.error('Supabase ping error:', error);
+    return { success: false, error };
+  }
+}
+
