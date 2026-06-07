@@ -3,9 +3,9 @@ import { Product, Settings } from './types';
 export const defaultSettings: Settings = {
   whatsappNumber: '+919667669383',
   instagram: '@minirevvz',
-  email: 'tavishahuja07@gmail.com',
+  email: 'minirevvzcollectibles@gmail.com',
   location: 'Delhi, India',
-  businessHours: 'Mon–Sat, 10am–8pm'
+  businessHours: 'Mon–Sat, 10am–10pm'
 };
 
 export const seedProducts: Product[] = [

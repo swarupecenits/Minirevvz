@@ -157,7 +157,7 @@ export function PublicLayout() {
                   <MapPin className="w-4 h-4" /> {settings.location}
                 </li>
                 <li className="flex items-center gap-2">
-                  <Mail className="w-4 h-4" /> {settings.email}
+                  <Mail className="w-4 h-4" /> minirevvzcollectibles@gmail.com
                 </li>
                 <li className="flex items-center gap-2">
                   <WhatsAppIcon className="w-4 h-4 text-[#25D366] shrink-0" />
