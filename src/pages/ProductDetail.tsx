@@ -209,6 +209,7 @@ export function ProductDetail() {
               size="lg"
               variant={isSoldOut ? 'outline' : 'whatsapp'}
               className="w-full gap-2 h-auto min-h-14 py-3 px-4 text-sm sm:text-base lg:text-lg leading-snug whitespace-normal text-center"
+              disabled={isSoldOut}
               onClick={handleWhatsAppClick}>
               <WhatsAppIcon className={`w-5 h-5 shrink-0 ${isSoldOut ? 'text-[#25D366]' : ''}`} />
               <span>
