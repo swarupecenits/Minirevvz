@@ -33,6 +33,7 @@ export function ProductDetail() {
     const message = getProductEnquiryMessage(
       product.name,
       product.category,
+      product.price,
       isSoldOut
     );
     const url = buildWhatsAppUrl(settings.whatsappNumber, message);

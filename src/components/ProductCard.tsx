@@ -21,6 +21,7 @@ export function ProductCard({ product }: ProductCardProps) {
     const message = getProductEnquiryMessage(
       product.name,
       product.category,
+      product.price,
       isSoldOut
     );
     const url = buildWhatsAppUrl(settings.whatsappNumber, message);
