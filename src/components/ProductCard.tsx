@@ -92,15 +92,17 @@ export function ProductCard({ product }: ProductCardProps) {
           >
             View Details
           </Button>
-          <Button
-            variant={isSoldOut ? 'outline' : 'whatsapp'}
-            size="sm"
-            className="w-full gap-1.5 px-2.5 h-auto min-h-9 py-2 text-xs sm:text-sm leading-tight whitespace-normal text-center"
-            onClick={handleWhatsAppClick}
-          >
-            <WhatsAppIcon className={`w-4 h-4 shrink-0 ${isSoldOut ? 'text-[#25D366]' : ''}`} />
-            <span>{isSoldOut ? 'Ask on WhatsApp' : 'Buy on WhatsApp'}</span>
-          </Button>
+          {!isSoldOut && (
+            <Button
+              variant="whatsapp"
+              size="sm"
+              className="w-full gap-1.5 px-2.5 h-auto min-h-9 py-2 text-xs sm:text-sm leading-tight whitespace-normal text-center"
+              onClick={handleWhatsAppClick}
+            >
+              <WhatsAppIcon className="w-4 h-4 shrink-0" />
+              <span>Buy on WhatsApp</span>
+            </Button>
+          )}
         </div>
       </div>
     </Link>
