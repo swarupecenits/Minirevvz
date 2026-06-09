@@ -3,34 +3,19 @@ import { Link } from 'react-router-dom';
 import { Product } from '../lib/types';
 import { Badge } from './ui/Badge';
 import { Button } from './ui/Button';
-import { WhatsAppIcon } from './icons/WhatsAppIcon';
 import { useStore } from '../lib/store';
-import { buildWhatsAppUrl, getProductEnquiryMessage } from '../lib/whatsapp';
 
 interface ProductCardProps {
   product: Product;
 }
 
 export function ProductCard({ product }: ProductCardProps) {
-  const { settings, trackWhatsAppClick } = useStore();
-  const isSoldOut = product.availability === 'Sold Out';
-
-  const handleWhatsAppClick = (e: React.MouseEvent) => {
-    e.preventDefault();
-    trackWhatsAppClick(product.id);
-    const message = getProductEnquiryMessage(
-      product.name,
-      product.category,
-      product.price,
-      isSoldOut
-    );
-    const url = buildWhatsAppUrl(settings.whatsappNumber, message);
-    window.open(url, '_blank');
-  };
+  const { settings } = useStore();
+  const isSoldOut = product.quantity === 0;
 
   return (
     <Link
-      to={`/products/${product.id}`}
+      to={`/checkout/${product.id}`}
       className="group flex flex-col rounded-2xl overflow-hidden border border-white/10 bg-gradient-to-b from-zinc-900/90 to-zinc-950 shadow-lg transition-all duration-500 hover:-translate-y-1.5 hover:border-white/20 hover:shadow-[0_24px_48px_-16px_rgba(0,0,0,0.65)]"
     >
       <div className="relative aspect-square overflow-hidden bg-zinc-900">
@@ -52,14 +37,14 @@ export function ProductCard({ product }: ProductCardProps) {
         <div className="absolute top-2.5 right-2.5 sm:top-3 sm:right-3 z-10">
           <Badge
             variant={
-              product.availability === 'Available'
-                ? 'success'
-                : product.availability === 'Limited Stock'
+              isSoldOut
+                ? 'danger'
+                : product.quantity < 3
                   ? 'warning'
-                  : 'danger'
+                  : 'success'
             }
           >
-            {product.availability}
+            {isSoldOut ? 'Sold Out' : `${product.quantity} in stock`}
           </Badge>
         </div>
       </div>
@@ -84,26 +69,12 @@ export function ProductCard({ product }: ProductCardProps) {
 
         <div className="mt-1 flex flex-col gap-2">
           <Button
-            variant="secondary"
+            variant="primary"
             size="sm"
             className="w-full h-9 text-xs sm:text-sm"
-            onClick={() => {
-              // Let the Link handle navigation
-            }}
           >
-            View Details
+            {isSoldOut ? 'Ask on WhatsApp' : 'Buy Now'}
           </Button>
-          {!isSoldOut && (
-            <Button
-              variant="whatsapp"
-              size="sm"
-              className="w-full gap-1.5 px-2.5 h-auto min-h-9 py-2 text-xs sm:text-sm leading-tight whitespace-normal text-center"
-              onClick={handleWhatsAppClick}
-            >
-              <WhatsAppIcon className="w-4 h-4 shrink-0" />
-              <span>Buy on WhatsApp</span>
-            </Button>
-          )}
         </div>
       </div>
     </Link>

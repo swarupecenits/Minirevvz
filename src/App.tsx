@@ -10,6 +10,7 @@ import { AdminLayout } from './components/layout/AdminLayout';
 import { Home } from './pages/Home';
 import { Products } from './pages/Products';
 import { ProductDetail } from './pages/ProductDetail';
+import { Checkout } from './pages/Checkout';
 import { About } from './pages/About';
 import { Contact } from './pages/Contact';
 import { SaleSets } from './pages/SaleSets';
@@ -19,6 +20,7 @@ import { Dashboard } from './pages/admin/Dashboard';
 import { ManageProducts } from './pages/admin/ManageProducts';
 import { ProductForm } from './pages/admin/ProductForm';
 import { Settings } from './pages/admin/Settings';
+import { OrdersManagement } from './pages/admin/OrdersManagement';
 // SEO Helper Component
 function SEO() {
   const location = useLocation();
@@ -63,6 +65,9 @@ export function App() {
             <Route path="/contact" element={<Contact />} />
           </Route>
 
+          {/* Checkout */}
+          <Route path="/checkout/:id" element={<Checkout />} />
+
           {/* Auth */}
           <Route path="/login" element={<Login />} />
 
@@ -72,6 +77,7 @@ export function App() {
             <Route path="products" element={<ManageProducts />} />
             <Route path="products/new" element={<ProductForm />} />
             <Route path="products/edit/:id" element={<ProductForm />} />
+            <Route path="orders" element={<OrdersManagement />} />
             <Route path="settings" element={<Settings />} />
           </Route>
         </Routes>

@@ -123,7 +123,7 @@ export function ManageProducts() {
                 <th className="px-6 py-4 font-medium">Product</th>
                 <th className="px-6 py-4 font-medium">Category</th>
                 <th className="px-6 py-4 font-medium">Price</th>
-                <th className="px-6 py-4 font-medium">Status</th>
+                <th className="px-6 py-4 font-medium">Stock</th>
                 <th className="px-6 py-4 font-medium">Public</th>
                 <th className="px-6 py-4 font-medium text-right">Actions</th>
               </tr>
@@ -160,14 +160,14 @@ export function ManageProducts() {
                     <td className="px-6 py-4">
                       <Badge
                         variant={
-                          product.availability === 'Available'
-                            ? 'success'
-                            : product.availability === 'Limited Stock'
+                          product.quantity === 0
+                            ? 'danger'
+                            : product.quantity < 3
                               ? 'warning'
-                              : 'danger'
+                              : 'success'
                         }
                       >
-                        {product.availability}
+                        {product.quantity} {product.quantity === 1 ? 'item' : 'items'}
                       </Badge>
                     </td>
                     <td className="px-6 py-4">

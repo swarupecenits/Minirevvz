@@ -1,13 +1,17 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { Package, TrendingUp, AlertCircle, MessageCircle } from 'lucide-react';
+import { Package, TrendingUp, AlertCircle, MessageCircle, ShoppingCart, Settings as SettingsIcon } from 'lucide-react';
 import { useStore } from '../../lib/store';
 import { Badge } from '../../components/ui/Badge';
+import { Button } from '../../components/ui/Button';
 export function Dashboard() {
   const { products, analytics } = useStore();
   const totalProducts = products.length;
   const soldOutCount = products.filter(
-    (p) => p.availability === 'Sold Out'
+    (p) => p.quantity === 0
+  ).length;
+  const lowStockCount = products.filter(
+    (p) => p.quantity > 0 && p.quantity < 3
   ).length;
   const premiumCount = products.filter((p) => p.isPremium).length;
   const totalClicks = Object.values(analytics.whatsappClicks).reduce(
@@ -44,6 +48,34 @@ export function Dashboard() {
         </p>
       </div>
 
+      {/* Quick Navigation */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+        <Link to="/admin/products">
+          <Button variant="secondary" className="w-full justify-start gap-2">
+            <Package className="w-4 h-4" />
+            Manage Products
+          </Button>
+        </Link>
+        <Link to="/admin/products/new">
+          <Button variant="secondary" className="w-full justify-start gap-2">
+            <Package className="w-4 h-4" />
+            Add Product
+          </Button>
+        </Link>
+        <Link to="/admin/orders">
+          <Button variant="secondary" className="w-full justify-start gap-2">
+            <ShoppingCart className="w-4 h-4" />
+            View Orders
+          </Button>
+        </Link>
+        <Link to="/admin/settings">
+          <Button variant="secondary" className="w-full justify-start gap-2">
+            <SettingsIcon className="w-4 h-4" />
+            Settings
+          </Button>
+        </Link>
+      </div>
+
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         <StatCard
           title="Total Products"
@@ -55,6 +87,12 @@ export function Dashboard() {
           title="Premium Models"
           value={premiumCount}
           icon={TrendingUp}
+          colorClass="bg-amber-500/10 text-amber-400" />
+        
+        <StatCard
+          title="Low Stock Items"
+          value={lowStockCount}
+          icon={AlertCircle}
           colorClass="bg-amber-500/10 text-amber-400" />
         
         <StatCard
