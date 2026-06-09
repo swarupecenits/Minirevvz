@@ -7,6 +7,7 @@ import { Badge } from '../../components/ui/Badge';
 import {
   deleteProductSupabase,
   deleteProductImages,
+  nullifyProductOnOrders,
   updateProductVisibility,
   formatSupabaseError,
   isMissingColumnError
@@ -64,6 +65,14 @@ export function ManageProducts() {
 
     const product = products.find((p) => p.id === id);
     try {
+      // First, nullify the product_id on all orders linked to this product
+      // so they don't get cascade-deleted when the product is removed
+      const { error: nullifyError } = await nullifyProductOnOrders(id);
+      if (nullifyError) {
+        console.error('Failed to nullify product reference on orders:', nullifyError);
+        // Continue anyway — the orders still have product_name/product_price for display
+      }
+
       if (product && product.images.length > 0) {
         const { error: imageError } = await deleteProductImages(product.images);
         if (imageError) {
