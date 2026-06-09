@@ -50,18 +50,13 @@ export function Home() {
   return (
     <div className="flex flex-col min-h-screen">
       {/* Hero Section */}
-      <section className="relative min-h-[60vh] sm:min-h-[90vh] flex items-center justify-center overflow-hidden">
+      <section className="relative min-h-[60vh] sm:min-h-[90vh] flex items-center justify-center overflow-hidden pt-20">
         {/* Background Image with Overlay */}
         <div className="absolute inset-0 z-0">
           <img
-            src="https://res.cloudinary.com/dagggqd6g/image/upload/c_fill,g_auto,q_auto,f_auto,w_800/v1781025512/gsdf_xhmew0.jpg"
-            srcSet="https://res.cloudinary.com/dagggqd6g/image/upload/c_fill,g_auto,q_auto,f_auto,w_400/v1781025512/gsdf_xhmew0.jpg 400w,
-                    https://res.cloudinary.com/dagggqd6g/image/upload/c_fill,g_auto,q_auto,f_auto,w_800/v1781025512/gsdf_xhmew0.jpg 800w,
-                    https://res.cloudinary.com/dagggqd6g/image/upload/c_fill,g_auto,q_auto,f_auto,w_1200/v1781025512/gsdf_xhmew0.jpg 1200w,
-                    https://res.cloudinary.com/dagggqd6g/image/upload/c_fill,g_auto,q_auto,f_auto,w_1920/v1781025512/gsdf_xhmew0.jpg 1920w"
-            sizes="(max-width: 640px) 400px, (max-width: 1024px) 800px, 1920px"
+            src="https://res.cloudinary.com/dagggqd6g/image/upload/v1781025512/gsdf_xhmew0.jpg"
             alt="Premium Diecast"
-            className="w-full h-full object-cover opacity-40 sm:object-center object-[center_20%]" />
+            className="w-full h-full object-cover opacity-40" />
 
           
           <div className="absolute bottom-0 left-0 right-0 h-28 bg-gradient-to-t from-zinc-950 via-zinc-950/70 to-transparent backdrop-blur-sm pointer-events-none" />
