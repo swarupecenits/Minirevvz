@@ -21,6 +21,7 @@ const ManageProducts = lazy(() => import('./pages/admin/ManageProducts').then(m 
 const ProductForm = lazy(() => import('./pages/admin/ProductForm').then(m => ({ default: m.ProductForm })));
 const Settings = lazy(() => import('./pages/admin/Settings').then(m => ({ default: m.Settings })));
 const OrdersManagement = lazy(() => import('./pages/admin/OrdersManagement').then(m => ({ default: m.OrdersManagement })));
+const NotFound = lazy(() => import('./pages/NotFound').then(m => ({ default: m.NotFound })));
 
 // Loading fallback for route transitions
 function PageLoader() {
@@ -95,6 +96,9 @@ export function App() {
               <Route path="orders" element={<OrdersManagement />} />
               <Route path="settings" element={<Settings />} />
             </Route>
+
+            {/* 404 Catch-all */}
+            <Route path="*" element={<NotFound />} />
           </Routes>
         </Suspense>
       </BrowserRouter>
