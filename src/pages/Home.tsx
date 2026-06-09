@@ -1,13 +1,14 @@
 import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { ArrowRight, Star, Shield } from 'lucide-react';
+import { ArrowRight, Star, Shield, Car, Trophy, Package, Sparkles, Gem, Timer, Palette } from 'lucide-react';
 import { WhatsAppIcon } from '../components/icons/WhatsAppIcon';
 import { Button } from '../components/ui/Button';
 import { ProductCard } from '../components/ProductCard';
 import LightRays from '../components/LightRays';
+import LogoLoop from '../components/LogoLoop';
 import { useStore } from '../lib/store';
 import { isProductPublic } from '../lib/types';
-import { CATEGORIES, CATEGORY_IMAGES } from '../lib/constants';
+import { CATEGORIES, CATEGORY_IMAGES, BRAND_NAME } from '../lib/constants';
 const fadeInUp = {
   initial: {
     opacity: 0,
@@ -53,11 +54,12 @@ export function Home() {
         {/* Background Image with Overlay */}
         <div className="absolute inset-0 z-0">
           <img
-            src="https://res.cloudinary.com/dagggqd6g/image/upload/v1780694229/i-nyoman-adi-wiraputra-ADlbY5Vs9M0-unsplash_col4uh.jpg"
+            src="https://res.cloudinary.com/dagggqd6g/image/upload/v1781025512/gsdf_xhmew0.jpg"
             alt="Premium Diecast"
             className="w-full h-full object-cover opacity-40" />
 
-          <div className="absolute inset-0 bg-gradient-to-b from-zinc-950/30 via-zinc-950/60 to-zinc-950"></div>
+          
+          <div className="absolute bottom-0 left-0 right-0 h-28 bg-gradient-to-t from-zinc-950 via-zinc-950/70 to-transparent backdrop-blur-sm pointer-events-none" />
           <div className="absolute inset-0 pointer-events-none">
             <LightRays
               raysOrigin="top-center"
@@ -102,7 +104,7 @@ export function Home() {
             </h1>
             <p className="text-base sm:text-lg md:text-xl text-zinc-400 mb-8 sm:mb-10 max-w-2xl mx-auto font-light">
               Explore imported Hot Wheels, Bburago, CCA, premiums, and exclusive
-              Every rev fuels a passion.
+              diecast models from around the world.
             </p>
             <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
               <Link to="/products" className="w-[90%] max-w-md sm:w-auto">
@@ -121,6 +123,38 @@ export function Home() {
               </Link>
             </div>
           </motion.div>
+        </div>
+      </section>
+
+      {/* Brand Showcase - Logo Loop */}
+      <section className="py-16 sm:py-20 bg-zinc-950">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <motion.div {...fadeInUp} className="text-center mb-10">
+            <h2 className="text-2xl md:text-3xl font-display font-bold mb-3">
+              Brands We Carry
+            </h2>
+            <p className="text-zinc-400 max-w-2xl mx-auto text-sm">
+              Premium diecast brands from around the world
+            </p>
+          </motion.div>
+          <div className="py-8">
+            <LogoLoop
+              logos={[
+                { src: "/hotwheels_logo.png", alt: "Hot Wheels", title: "Hot Wheels" },
+                { src: "/bburago.png", alt: "Bburago", title: "Bburago"},
+                { src: "/cca_logo.webp", alt: "CCA", title: "CCA" },
+                { src: "/matchbox_logo.png", alt: "MatchBox", title: "MatchBox" },
+              ]}
+              speed={80}
+              direction="left"
+              logoHeight={40}
+              gap={48}
+              hoverSpeed={20}
+              fadeOut
+              scaleOnHover
+              ariaLabel={`${BRAND_NAME} brand categories`}
+            />
+          </div>
         </div>
       </section>
 
