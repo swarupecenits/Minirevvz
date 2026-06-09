@@ -21,6 +21,7 @@ export function ProductForm() {
     brand: '',
     category: CATEGORIES[0] as Category,
     price: '',
+    quantity: '',
     availability: AVAILABILITY_STATUSES[0] as AvailabilityStatus,
     shortDescription: '',
     description: '',
@@ -43,6 +44,7 @@ export function ProductForm() {
         brand: existingProduct.brand,
         category: existingProduct.category,
         price: existingProduct.price.toString(),
+        quantity: existingProduct.quantity.toString(),
         availability: existingProduct.availability,
         shortDescription: existingProduct.shortDescription,
         description: existingProduct.description,
@@ -113,6 +115,7 @@ export function ProductForm() {
         brand: formData.brand,
         category: formData.category,
         price: parseFloat(formData.price) || 0,
+        quantity: parseInt(formData.quantity) || 0,
         description: formData.description,
         short_description: formData.shortDescription,
         images,
@@ -132,6 +135,7 @@ export function ProductForm() {
         brand: formData.brand,
         category: formData.category,
         price: parseFloat(formData.price) || 0,
+        quantity: parseInt(formData.quantity) || 0,
         description: formData.description,
         shortDescription: formData.shortDescription,
         images,
@@ -296,6 +300,24 @@ export function ProductForm() {
                 }
                 placeholder="0"
                 aria-label="Price"
+                className="w-full bg-zinc-900/50 border border-white/10 rounded-xl px-4 py-2 text-zinc-100 focus:ring-2 focus:ring-zinc-500" />
+              
+            </div>
+            <div>
+              <InputLabel>Available Quantity (Stock) *</InputLabel>
+              <input
+                required
+                type="number"
+                min="0"
+                value={formData.quantity}
+                onChange={(e) =>
+                setFormData({
+                  ...formData,
+                  quantity: e.target.value
+                })
+                }
+                placeholder="0"
+                aria-label="Stock Quantity"
                 className="w-full bg-zinc-900/50 border border-white/10 rounded-xl px-4 py-2 text-zinc-100 focus:ring-2 focus:ring-zinc-500" />
               
             </div>

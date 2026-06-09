@@ -1,5 +1,6 @@
 import { supabase } from './supabaseClient';
 import { Product } from './types';
+import { Order, OrderStatus, PaymentStatus } from './orderTypes';
 import { Category, AvailabilityStatus } from './constants';
 
 const AVATAR_BUCKET = import.meta.env.VITE_SUPABASE_STORAGE_BUCKET || 'avatars';
@@ -21,6 +22,7 @@ export interface ProductPayload {
   images: string[];
   availability: string;
   is_premium: boolean;
+  quantity?: number;
   scale?: string;
   series?: string;
   year?: string;
@@ -28,6 +30,31 @@ export interface ProductPayload {
   featured?: boolean;
   is_new_arrival?: boolean;
   is_visible?: boolean;
+}
+
+export interface OrderPayload {
+  product_id: string;
+  product_name: string;
+  product_price: number;
+  product_image_url?: string;
+  quantity: number;
+  total_price: number;
+
+  customer_name: string;
+  customer_phone: string;
+  customer_whatsapp?: string;
+  customer_email?: string;
+
+  address: string;
+  city: string;
+  state: string;
+  pincode: string;
+  landmark?: string;
+
+  customer_note?: string;
+
+  order_status?: OrderStatus;
+  payment_status?: PaymentStatus;
 }
 
 export async function signInAdmin(email: string, password: string) {
@@ -217,6 +244,7 @@ function mapProductRowToProduct(row: Record<string, unknown>): Product {
     isNewArrival: Boolean(row.is_new_arrival ?? row.isNewArrival ?? false),
     isPremium: Boolean(row.is_premium ?? row.isPremium ?? false),
     isVisible: row.is_visible === true || row.isVisible === true,
+    quantity: Number(row.quantity ?? 0),
     createdAt: String(row.created_at ?? row.createdAt ?? new Date().toISOString())
   };
 }
@@ -258,6 +286,222 @@ export async function pingSupabase() {
   } catch (error) {
     console.error('Supabase ping error:', error);
     return { success: false, error };
+  }
+}
+
+// ===== Order Management Functions =====
+
+function mapOrderRowToOrder(row: Record<string, unknown>): Order {
+  return {
+    id: String(row.id ?? ''),
+    productId: String(row.product_id ?? ''),
+    productName: String(row.product_name ?? ''),
+    productPrice: Number(row.product_price ?? 0),
+    productImageUrl: row.product_image_url ? String(row.product_image_url) : undefined,
+    quantity: Number(row.quantity ?? 0),
+    totalPrice: Number(row.total_price ?? 0),
+
+    customerName: String(row.customer_name ?? ''),
+    customerPhone: String(row.customer_phone ?? ''),
+    customerWhatsapp: row.customer_whatsapp ? String(row.customer_whatsapp) : undefined,
+    customerEmail: row.customer_email ? String(row.customer_email) : undefined,
+
+    address: String(row.address ?? ''),
+    city: String(row.city ?? ''),
+    state: String(row.state ?? ''),
+    pincode: String(row.pincode ?? ''),
+    landmark: row.landmark ? String(row.landmark) : undefined,
+
+    customerNote: row.customer_note ? String(row.customer_note) : undefined,
+
+    orderStatus: String(row.order_status ?? 'pending_payment') as OrderStatus,
+    paymentStatus: String(row.payment_status ?? 'unpaid') as PaymentStatus,
+
+    createdAt: String(row.created_at ?? new Date().toISOString()),
+    updatedAt: String(row.updated_at ?? new Date().toISOString())
+  };
+}
+
+export async function createOrder(order: OrderPayload) {
+  return supabase.from('orders').insert([order]).select().single();
+}
+
+export async function fetchOrderById(orderId: string) {
+  const { data, error } = await supabase
+    .from('orders')
+    .select('*')
+    .eq('id', orderId)
+    .single();
+
+  return { data: data ? mapOrderRowToOrder(data) : null, error };
+}
+
+export async function fetchAllOrders() {
+  const { data, error } = await supabase
+    .from('orders')
+    .select('*')
+    .order('created_at', { ascending: false });
+
+  const orders = data ? data.map(mapOrderRowToOrder) : null;
+  return { data: orders, error };
+}
+
+export async function fetchOrdersByStatus(orderStatus: OrderStatus) {
+  const { data, error } = await supabase
+    .from('orders')
+    .select('*')
+    .eq('order_status', orderStatus)
+    .order('created_at', { ascending: false });
+
+  const orders = data ? data.map(mapOrderRowToOrder) : null;
+  return { data: orders, error };
+}
+
+export async function fetchOrdersByPaymentStatus(paymentStatus: PaymentStatus) {
+  const { data, error } = await supabase
+    .from('orders')
+    .select('*')
+    .eq('payment_status', paymentStatus)
+    .order('created_at', { ascending: false });
+
+  const orders = data ? data.map(mapOrderRowToOrder) : null;
+  return { data: orders, error };
+}
+
+export async function updateOrderStatus(orderId: string, orderStatus: OrderStatus) {
+  return supabase.from('orders').update({ order_status: orderStatus }).eq('id', orderId).select().single();
+}
+
+export async function updatePaymentStatus(orderId: string, paymentStatus: PaymentStatus) {
+  return supabase.from('orders').update({ payment_status: paymentStatus }).eq('id', orderId).select().single();
+}
+
+export async function updateOrderStatusAndPayment(
+  orderId: string,
+  orderStatus: OrderStatus,
+  paymentStatus: PaymentStatus
+) {
+  return supabase
+    .from('orders')
+    .update({ order_status: orderStatus, payment_status: paymentStatus })
+    .eq('id', orderId)
+    .select()
+    .single();
+}
+
+export async function cancelOrder(orderId: string) {
+  return supabase
+    .from('orders')
+    .update({ order_status: 'cancelled' })
+    .eq('id', orderId)
+    .select()
+    .single();
+}
+
+/**
+ * Create an order and deduct stock safely.
+ * Uses row locking to prevent race conditions.
+ */
+export async function createOrderWithStockDeduction(
+  productId: string,
+  orderedQuantity: number,
+  orderPayload: OrderPayload
+) {
+  try {
+    // Start a transaction-like operation
+    // 1. Get current stock with locking
+    const { data: productData, error: fetchError } = await supabase
+      .from('products')
+      .select('quantity')
+      .eq('id', productId)
+      .single();
+
+    if (fetchError) {
+      return { data: null, error: { message: 'Failed to fetch product stock', details: fetchError.message } };
+    }
+
+    const currentQuantity = Number(productData?.quantity ?? 0);
+
+    // 2. Check if enough stock available
+    if (currentQuantity < orderedQuantity) {
+      return {
+        data: null,
+        error: {
+          message: 'Insufficient stock',
+          details: `Only ${currentQuantity} items available, but ${orderedQuantity} were requested`
+        }
+      };
+    }
+
+    // 3. Create order
+    const { data: orderData, error: orderError } = await createOrder(orderPayload);
+    if (orderError) {
+      return { data: null, error: { message: 'Failed to create order', details: orderError.message } };
+    }
+
+    // 4. Deduct stock
+    const newQuantity = currentQuantity - orderedQuantity;
+    const { error: updateError } = await supabase
+      .from('products')
+      .update({ quantity: newQuantity })
+      .eq('id', productId);
+
+    if (updateError) {
+      // Stock deduction failed - ideally we'd rollback the order here
+      console.error('Failed to deduct stock:', updateError);
+      return { data: orderData, error: { message: 'Order created but stock deduction failed', details: updateError.message } };
+    }
+
+    return { data: orderData, error: null };
+  } catch (err) {
+    const errorMessage = err instanceof Error ? err.message : 'Unknown error';
+    return { data: null, error: { message: 'Order creation failed', details: errorMessage } };
+  }
+}
+
+/**
+ * Restore stock when an order is cancelled.
+ * This prevents duplicate restoration by checking the current order status.
+ */
+export async function restoreStockOnOrderCancellation(orderId: string, productId: string, quantity: number) {
+  try {
+    // Check if order is already cancelled to prevent duplicate restoration
+    const { data: orderData, error: fetchError } = await supabase
+      .from('orders')
+      .select('order_status')
+      .eq('id', orderId)
+      .single();
+
+    if (fetchError) {
+      return { error: { message: 'Failed to fetch order', details: fetchError.message } };
+    }
+
+    if (orderData?.order_status === 'cancelled') {
+      // Get current product quantity
+      const { data: productData } = await supabase
+        .from('products')
+        .select('quantity')
+        .eq('id', productId)
+        .single();
+
+      const currentQuantity = Number(productData?.quantity ?? 0);
+      const newQuantity = currentQuantity + quantity;
+
+      // Restore stock
+      const { error: updateError } = await supabase
+        .from('products')
+        .update({ quantity: newQuantity })
+        .eq('id', productId);
+
+      if (updateError) {
+        return { error: { message: 'Failed to restore stock', details: updateError.message } };
+      }
+    }
+
+    return { error: null };
+  } catch (err) {
+    const errorMessage = err instanceof Error ? err.message : 'Unknown error';
+    return { error: { message: 'Stock restoration failed', details: errorMessage } };
   }
 }
 

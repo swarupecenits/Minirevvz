@@ -4,6 +4,7 @@ import {
   LayoutDashboard,
   Package,
   PlusCircle,
+  ShoppingCart,
   Settings,
   LogOut,
   Menu,
@@ -34,6 +35,11 @@ export function AdminLayout() {
     icon: PlusCircle,
     label: 'Add Product',
     path: '/admin/products/new'
+  },
+  {
+    icon: ShoppingCart,
+    label: 'Orders',
+    path: '/admin/orders'
   },
   {
     icon: Settings,

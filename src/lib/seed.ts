@@ -16,6 +16,7 @@ export const seedProducts: Product[] = [
   category: 'Premiums',
   price: 3499,
   availability: 'Available',
+  quantity: 5,
   images: [
   'https://images.unsplash.com/photo-1580273916550-e323be2ae537?auto=format&fit=crop&q=80&w=800',
   'https://images.unsplash.com/photo-1580274455191-1c62238fa333?auto=format&fit=crop&q=80&w=800'],
@@ -41,6 +42,7 @@ export const seedProducts: Product[] = [
   category: 'Bburago',
   price: 4999,
   availability: 'Limited Stock',
+  quantity: 2,
   images: [
   'https://images.unsplash.com/photo-1614200187524-dc4b892acf16?auto=format&fit=crop&q=80&w=800',
   'https://images.unsplash.com/photo-1614200179396-2bdb77ebf81b?auto=format&fit=crop&q=80&w=800'],
@@ -66,6 +68,7 @@ export const seedProducts: Product[] = [
   category: 'Imported Hot Wheels',
   price: 9499,
   availability: 'Sold Out',
+  quantity: 0,
   images: [
   'https://images.unsplash.com/photo-1583121274602-3e2820c69888?auto=format&fit=crop&q=80&w=800'],
 
@@ -89,6 +92,7 @@ export const seedProducts: Product[] = [
   category: 'CCA',
   price: 2499,
   availability: 'Available',
+  quantity: 8,
   images: [
   'https://images.unsplash.com/photo-1669023030485-573b6ac99761?auto=format&fit=crop&q=80&w=800'],
 
@@ -112,6 +116,7 @@ export const seedProducts: Product[] = [
   category: 'Special Sets',
   price: 6499,
   availability: 'Available',
+  quantity: 3,
   images: [
   'https://images.unsplash.com/photo-1532581140115-3e38f4fd89f3?auto=format&fit=crop&q=80&w=800'],
 
@@ -136,6 +141,7 @@ export const seedProducts: Product[] = [
   category: 'Sale',
   price: 2999,
   availability: 'Available',
+  quantity: 6,
   images: [
     'https://images.unsplash.com/photo-1532581140115-3e38f4fd89f3?auto=format&fit=crop&q=80&w=800'
   ],
@@ -159,6 +165,7 @@ export const seedProducts: Product[] = [
   category: 'Bburago',
   price: 4499,
   availability: 'Available',
+  quantity: 4,
   images: [
   'https://images.unsplash.com/photo-1620882814836-98a2bc9944ce?auto=format&fit=crop&q=80&w=800'],
 
@@ -182,6 +189,7 @@ export const seedProducts: Product[] = [
   category: 'PreOrders',
   price: 11999,
   availability: 'Limited Stock',
+  quantity: 1,
   images: [
   'https://images.unsplash.com/photo-1611821064430-0d40221e4e03?auto=format&fit=crop&q=80&w=800'],
 
@@ -205,6 +213,7 @@ export const seedProducts: Product[] = [
   category: 'CCA',
   price: 2999,
   availability: 'Available',
+  quantity: 7,
   images: [
   'https://images.unsplash.com/photo-1584345604476-8ec5e12e42a5?auto=format&fit=crop&q=80&w=800'],
 

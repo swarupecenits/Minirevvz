@@ -18,6 +18,7 @@ export interface Product {
   isNewArrival: boolean;
   isPremium: boolean;
   isVisible: boolean;
+  quantity: number; // Available stock
   createdAt: string;
 }
 

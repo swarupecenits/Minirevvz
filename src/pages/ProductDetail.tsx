@@ -3,20 +3,34 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { ArrowLeft, ShieldCheck, Truck, ChevronRight } from 'lucide-react';
 import { WhatsAppIcon } from '../components/icons/WhatsAppIcon';
+import { CheckoutForm } from '../components/CheckoutForm';
+import { CheckoutConfirmation } from '../components/CheckoutConfirmation';
 import { useStore } from '../lib/store';
 import { isProductPublic } from '../lib/types';
 import { Button } from '../components/ui/Button';
 import { Badge } from '../components/ui/Badge';
-import { buildWhatsAppUrl, getProductEnquiryMessage } from '../lib/whatsapp';
+import { buildWhatsAppUrl, getProductEnquiryMessage, getOrderConfirmationMessage } from '../lib/whatsapp';
+import { createOrderWithStockDeduction } from '../lib/supabase';
+import { CheckoutFormData, Order } from '../lib/orderTypes';
+
 export function ProductDetail() {
   const { id } = useParams();
   const navigate = useNavigate();
   const { products, settings, trackWhatsAppClick } = useStore();
   const product = products.find((p) => p.id === id && isProductPublic(p));
   const [activeImage, setActiveImage] = useState(0);
+
+  // Checkout state
+  const [showCheckoutForm, setShowCheckoutForm] = useState(false);
+  const [showConfirmation, setShowConfirmation] = useState(false);
+  const [checkoutFormData, setCheckoutFormData] = useState<CheckoutFormData | null>(null);
+  const [isCreatingOrder, setIsCreatingOrder] = useState(false);
+  const [orderError, setOrderError] = useState<string>('');
+
   useEffect(() => {
     window.scrollTo(0, 0);
   }, [id]);
+
   if (!product) {
     return (
       <div className="min-h-screen pt-32 flex flex-col items-center justify-center">
@@ -24,36 +38,158 @@ export function ProductDetail() {
           Product Not Found
         </h2>
         <Button onClick={() => navigate('/products')}>Back to Products</Button>
-      </div>);
-
-  }
-  const isSoldOut = product.availability === 'Sold Out';
-  const handleWhatsAppClick = () => {
-    trackWhatsAppClick(product.id);
-    const message = getProductEnquiryMessage(
-      product.name,
-      product.category,
-      product.price,
-      isSoldOut
+      </div>
     );
-    const url = buildWhatsAppUrl(settings.whatsappNumber, message);
-    window.open(url, '_blank');
+  }
+
+  const isSoldOut = product.quantity === 0;
+
+  const handleBuyClick = () => {
+    if (isSoldOut) {
+      // If sold out, show inquiry message instead
+      trackWhatsAppClick(product.id);
+      const message = getProductEnquiryMessage(
+        product.name,
+        product.category,
+        product.price,
+        true
+      );
+      const url = buildWhatsAppUrl(settings.whatsappNumber, message);
+      window.open(url, '_blank');
+    } else {
+      // Otherwise open checkout form
+      setShowCheckoutForm(true);
+      setOrderError('');
+    }
   };
+
+  const handleCheckoutSubmit = (formData: CheckoutFormData) => {
+    setCheckoutFormData(formData);
+    setShowCheckoutForm(false);
+    setShowConfirmation(true);
+  };
+
+  const handleConfirmOrder = async () => {
+    if (!checkoutFormData || !product) return;
+
+    setIsCreatingOrder(true);
+    setOrderError('');
+
+    try {
+      const totalPrice = product.price * checkoutFormData.quantity;
+
+      // Create order with stock deduction
+      const { data: orderData, error } = await createOrderWithStockDeduction(
+        product.id,
+        checkoutFormData.quantity,
+        {
+          product_id: product.id,
+          product_name: product.name,
+          product_price: product.price,
+          product_image_url: product.images[0],
+          quantity: checkoutFormData.quantity,
+          total_price: totalPrice,
+          customer_name: checkoutFormData.customerName,
+          customer_phone: checkoutFormData.customerPhone,
+          customer_whatsapp: checkoutFormData.customerWhatsapp || undefined,
+          customer_email: checkoutFormData.customerEmail || undefined,
+          address: checkoutFormData.address,
+          city: checkoutFormData.city,
+          state: checkoutFormData.state,
+          pincode: checkoutFormData.pincode,
+          landmark: checkoutFormData.landmark || undefined,
+          customer_note: checkoutFormData.customerNote || undefined,
+          order_status: 'pending_payment',
+          payment_status: 'unpaid'
+        }
+      );
+
+      if (error) {
+        console.error('Order creation failed:', error);
+        setOrderError(error.message || 'Failed to create order. Please try again.');
+        setShowConfirmation(true);
+        return;
+      }
+
+      if (!orderData) {
+        setOrderError('No order data returned. Please try again.');
+        setShowConfirmation(true);
+        return;
+      }
+
+      // Track the purchase
+      trackWhatsAppClick(product.id);
+
+      // Map the returned data to Order type
+      const order: Order = {
+        id: orderData.id || '',
+        productId: product.id,
+        productName: product.name,
+        productPrice: product.price,
+        productImageUrl: product.images[0],
+        quantity: checkoutFormData.quantity,
+        totalPrice: totalPrice,
+        customerName: checkoutFormData.customerName,
+        customerPhone: checkoutFormData.customerPhone,
+        customerWhatsapp: checkoutFormData.customerWhatsapp,
+        customerEmail: checkoutFormData.customerEmail,
+        address: checkoutFormData.address,
+        city: checkoutFormData.city,
+        state: checkoutFormData.state,
+        pincode: checkoutFormData.pincode,
+        landmark: checkoutFormData.landmark,
+        customerNote: checkoutFormData.customerNote,
+        orderStatus: 'pending_payment',
+        paymentStatus: 'unpaid',
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString()
+      };
+
+      // Generate WhatsApp message with order details
+      const message = getOrderConfirmationMessage(order);
+      const url = buildWhatsAppUrl(settings.whatsappNumber, message);
+
+      // Close modals and redirect to WhatsApp
+      setShowConfirmation(false);
+      setCheckoutFormData(null);
+      window.open(url, '_blank');
+    } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : 'An unexpected error occurred';
+      console.error('Error creating order:', err);
+      setOrderError(errorMessage);
+      setShowConfirmation(true);
+    } finally {
+      setIsCreatingOrder(false);
+    }
+  };
+
+  const handleEditOrder = () => {
+    setShowConfirmation(false);
+    setShowCheckoutForm(true);
+  };
+
+  const handleCloseCheckout = () => {
+    setShowCheckoutForm(false);
+    setShowConfirmation(false);
+    setCheckoutFormData(null);
+    setOrderError('');
+  };
+
   return (
     <div className="pt-24 pb-24 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 min-h-screen">
       {/* Breadcrumbs */}
       <div className="flex items-center gap-2 text-sm text-zinc-500 mb-8">
         <button
           onClick={() => navigate('/products')}
-          className="hover:text-zinc-300 transition-colors">
-          
+          className="hover:text-zinc-300 transition-colors"
+        >
           Products
         </button>
         <ChevronRight className="w-4 h-4" />
         <button
           onClick={() => navigate(`/products?category=${product.category}`)}
-          className="hover:text-zinc-300 transition-colors">
-          
+          className="hover:text-zinc-300 transition-colors"
+        >
           {product.category}
         </button>
         <ChevronRight className="w-4 h-4" />
@@ -128,8 +264,8 @@ export function ProductDetail() {
             opacity: 1,
             x: 0
           }}
-          className="flex flex-col">
-          
+          className="flex flex-col"
+        >
           <div className="mb-6">
             <div className="flex items-start justify-between mb-4 gap-4 flex-col sm:flex-row">
               <div className="space-y-2">
@@ -142,14 +278,10 @@ export function ProductDetail() {
               </div>
               <Badge
                 variant={
-                product.availability === 'Available' ?
-                'success' :
-                product.availability === 'Limited Stock' ?
-                'warning' :
-                'danger'
-                }>
-                
-                {product.availability}
+                  isSoldOut ? 'danger' : product.quantity < 3 ? 'warning' : 'success'
+                }
+              >
+                {isSoldOut ? 'Sold Out' : `${product.quantity} in stock`}
               </Badge>
             </div>
             <h1 className="text-2xl sm:text-3xl md:text-4xl font-display font-bold text-zinc-100 mb-4 leading-tight">
@@ -169,64 +301,71 @@ export function ProductDetail() {
               Model Specifications
             </h3>
             <div className="grid grid-cols-2 gap-y-4 gap-x-8 text-sm">
-              {product.scale &&
-              <div>
+              {product.scale && (
+                <div>
                   <span className="text-zinc-500 block mb-1">Scale</span>
-                  <span className="text-zinc-200 font-medium">
-                    {product.scale}
-                  </span>
+                  <span className="text-zinc-200 font-medium">{product.scale}</span>
                 </div>
-              }
-              {product.series &&
-              <div>
+              )}
+              {product.series && (
+                <div>
                   <span className="text-zinc-500 block mb-1">Series</span>
-                  <span className="text-zinc-200 font-medium">
-                    {product.series}
-                  </span>
+                  <span className="text-zinc-200 font-medium">{product.series}</span>
                 </div>
-              }
-              {product.year &&
-              <div>
+              )}
+              {product.year && (
+                <div>
                   <span className="text-zinc-500 block mb-1">Year</span>
-                  <span className="text-zinc-200 font-medium">
-                    {product.year}
-                  </span>
+                  <span className="text-zinc-200 font-medium">{product.year}</span>
                 </div>
-              }
-              {product.packagingCondition &&
-              <div>
+              )}
+              {product.packagingCondition && (
+                <div>
                   <span className="text-zinc-500 block mb-1">Condition</span>
                   <span className="text-zinc-200 font-medium">
                     {product.packagingCondition}
                   </span>
                 </div>
-              }
+              )}
             </div>
           </div>
 
           <div className="mt-auto space-y-4">
             <Button
               size="lg"
-              variant={isSoldOut ? 'outline' : 'whatsapp'}
+              variant={isSoldOut ? 'outline' : 'primary'}
               className="w-full gap-2 h-auto min-h-14 py-3 px-4 text-sm sm:text-base lg:text-lg leading-snug whitespace-normal text-center"
-              disabled={isSoldOut}
-              onClick={handleWhatsAppClick}>
-              <WhatsAppIcon className={`w-5 h-5 shrink-0 ${isSoldOut ? 'text-[#25D366]' : ''}`} />
-              <span>
-                {isSoldOut ? (
-                  <>
+              disabled={isCreatingOrder}
+              onClick={handleBuyClick}
+            >
+              {isCreatingOrder ? (
+                <>
+                  <span>Creating Order...</span>
+                </>
+              ) : isSoldOut ? (
+                <>
+                  <WhatsAppIcon className="w-5 h-5 shrink-0" />
+                  <span>
                     <span className="sm:hidden">Ask on WhatsApp</span>
                     <span className="hidden sm:inline">Ask for Availability on WhatsApp</span>
-                  </>
-                ) : (
-                  'Buy on WhatsApp'
-                )}
-              </span>
+                  </span>
+                </>
+              ) : (
+                <>
+                  <span>Buy Now</span>
+                </>
+              )}
             </Button>
             <p className="text-center text-sm text-zinc-500">
-              No payment required now. You will be redirected to WhatsApp to
-              discuss purchase details directly with us.
+              {isSoldOut
+                ? 'This item is currently sold out. Contact us on WhatsApp for inquiries.'
+                : 'Fill in your details and confirm your order. Then proceed to payment on WhatsApp.'}
             </p>
+            {orderError && (
+              <div className="p-3 rounded-lg bg-red-500/10 border border-red-500/20 text-red-400 text-sm">
+                {orderError}
+              </div>
+            )}
           </div>
 
           <div className="grid grid-cols-2 gap-4 mt-8 pt-8 border-t border-white/10">
@@ -241,6 +380,29 @@ export function ProductDetail() {
           </div>
         </motion.div>
       </div>
-    </div>);
 
+      {/* Checkout Modals */}
+      {showCheckoutForm && (
+        <CheckoutForm
+          productName={product.name}
+          maxQuantity={product.quantity}
+          onSubmit={handleCheckoutSubmit}
+          onClose={handleCloseCheckout}
+        />
+      )}
+
+      {showConfirmation && checkoutFormData && (
+        <CheckoutConfirmation
+          productName={product.name}
+          productPrice={product.price}
+          productImage={product.images[0]}
+          formData={checkoutFormData}
+          onConfirm={handleConfirmOrder}
+          onEdit={handleEditOrder}
+          onClose={handleCloseCheckout}
+          isLoading={isCreatingOrder}
+        />
+      )}
+    </div>
+  );
 }
