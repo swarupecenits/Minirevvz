@@ -179,7 +179,10 @@ export function CheckoutConfirmation({
                   Confirming...
                 </>
               ) : (
-                'Confirm Order'
+                <>
+                  <span className="sm:hidden">Confirm on WhatsApp</span>
+                  <span className="hidden sm:inline">Confirm Order</span>
+                </>
               )}
             </Button>
           </div>
