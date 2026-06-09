@@ -221,6 +221,13 @@ export function isMissingColumnError(error: SupabaseErrorLike, column: string): 
   );
 }
 
+export async function nullifyProductOnOrders(productId: string) {
+  return supabase
+    .from('orders')
+    .update({ product_id: null })
+    .eq('product_id', productId);
+}
+
 export async function deleteProductSupabase(id: string) {
   return supabase.from('products').delete().eq('id', id);
 }
