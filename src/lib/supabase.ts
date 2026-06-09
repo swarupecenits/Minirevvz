@@ -398,6 +398,13 @@ export async function cancelOrder(orderId: string) {
     .single();
 }
 
+export async function deleteOrder(orderId: string) {
+  return supabase
+    .from('orders')
+    .delete()
+    .eq('id', orderId);
+}
+
 /**
  * Create an order and deduct stock safely.
  * Uses row locking to prevent race conditions.
