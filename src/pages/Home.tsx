@@ -54,9 +54,14 @@ export function Home() {
         {/* Background Image with Overlay */}
         <div className="absolute inset-0 z-0">
           <img
-            src="https://res.cloudinary.com/dagggqd6g/image/upload/v1781025512/gsdf_xhmew0.jpg"
+            src="https://res.cloudinary.com/dagggqd6g/image/upload/c_fill,g_auto,q_auto,f_auto,w_800/v1781025512/gsdf_xhmew0.jpg"
+            srcSet="https://res.cloudinary.com/dagggqd6g/image/upload/c_fill,g_auto,q_auto,f_auto,w_400/v1781025512/gsdf_xhmew0.jpg 400w,
+                    https://res.cloudinary.com/dagggqd6g/image/upload/c_fill,g_auto,q_auto,f_auto,w_800/v1781025512/gsdf_xhmew0.jpg 800w,
+                    https://res.cloudinary.com/dagggqd6g/image/upload/c_fill,g_auto,q_auto,f_auto,w_1200/v1781025512/gsdf_xhmew0.jpg 1200w,
+                    https://res.cloudinary.com/dagggqd6g/image/upload/c_fill,g_auto,q_auto,f_auto,w_1920/v1781025512/gsdf_xhmew0.jpg 1920w"
+            sizes="(max-width: 640px) 400px, (max-width: 1024px) 800px, 1920px"
             alt="Premium Diecast"
-            className="w-full h-full object-cover opacity-40" />
+            className="w-full h-full object-cover opacity-40 sm:object-center object-[center_20%]" />
 
           
           <div className="absolute bottom-0 left-0 right-0 h-28 bg-gradient-to-t from-zinc-950 via-zinc-950/70 to-transparent backdrop-blur-sm pointer-events-none" />
