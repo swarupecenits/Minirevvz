@@ -1,9 +1,9 @@
 import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { Search, Eye, EyeOff, CheckCircle, Clock, Package, Truck, X as CloseIcon } from 'lucide-react';
+import { Search, Eye, EyeOff, CheckCircle, Clock, Package, Truck, X as CloseIcon, Trash2 } from 'lucide-react';
 import { Button } from '../../components/ui/Button';
 import { Badge } from '../../components/ui/Badge';
-import { fetchAllOrders, updateOrderStatus, updatePaymentStatus, cancelOrder } from '../../lib/supabase';
+import { fetchAllOrders, updateOrderStatus, updatePaymentStatus, cancelOrder, deleteOrder } from '../../lib/supabase';
 import { Order, OrderStatus, PaymentStatus } from '../../lib/orderTypes';
 
 const ORDER_STATUSES: OrderStatus[] = ['pending_payment', 'confirmed', 'packed', 'shipped', 'delivered', 'cancelled'];
@@ -42,6 +42,7 @@ export function OrdersManagement() {
   const [expandedOrderId, setExpandedOrderId] = useState<string | null>(null);
   const [updatingOrderId, setUpdatingOrderId] = useState<string | null>(null);
   const [cancellingOrderId, setCancellingOrderId] = useState<string | null>(null);
+  const [deletingOrderId, setDeletingOrderId] = useState<string | null>(null);
 
   // Load orders on mount
   useEffect(() => {
@@ -166,6 +167,28 @@ export function OrdersManagement() {
       console.error('Error:', err);
     } finally {
       setCancellingOrderId(null);
+    }
+  };
+
+  const handleDeleteOrder = async (orderId: string) => {
+    if (!window.confirm('Are you sure you want to permanently delete this order? This action cannot be undone.')) {
+      return;
+    }
+
+    setDeletingOrderId(orderId);
+    try {
+      const { error } = await deleteOrder(orderId);
+      if (error) {
+        setError('Failed to delete order.');
+        return;
+      }
+      setOrders((prev) => prev.filter((order) => order.id !== orderId));
+      setExpandedOrderId(null);
+    } catch (err) {
+      setError('An error occurred while deleting order.');
+      console.error('Error:', err);
+    } finally {
+      setDeletingOrderId(null);
     }
   };
 
@@ -486,6 +509,19 @@ export function OrdersManagement() {
                           : 'Cancel Order'}
                       </Button>
                     )}
+
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => handleDeleteOrder(order.id)}
+                      disabled={deletingOrderId === order.id}
+                      className="w-full text-orange-400 border-orange-500/20 hover:bg-orange-500/10 flex items-center justify-center gap-2"
+                    >
+                      <Trash2 className="w-4 h-4" />
+                      {deletingOrderId === order.id
+                        ? 'Deleting...'
+                        : 'Delete Order'}
+                    </Button>
                   </div>
                 </div>
               )}
