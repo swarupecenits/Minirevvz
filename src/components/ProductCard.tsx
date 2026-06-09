@@ -3,14 +3,12 @@ import { Link } from 'react-router-dom';
 import { Product } from '../lib/types';
 import { Badge } from './ui/Badge';
 import { Button } from './ui/Button';
-import { useStore } from '../lib/store';
 
 interface ProductCardProps {
   product: Product;
 }
 
-export function ProductCard({ product }: ProductCardProps) {
-  const { settings } = useStore();
+export const ProductCard = React.memo(function ProductCard({ product }: ProductCardProps) {
   const isSoldOut = product.quantity === 0;
 
   return (
@@ -79,4 +77,4 @@ export function ProductCard({ product }: ProductCardProps) {
       </div>
     </Link>
   );
-}
+});

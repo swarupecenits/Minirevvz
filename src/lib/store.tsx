@@ -1,8 +1,9 @@
-import React, { useEffect, useState, createContext, useContext, ReactNode } from 'react';
+import React, { useEffect, useState, useCallback, useRef, createContext, useContext, ReactNode, useMemo } from 'react';
 import { Product, Settings, SellerAccount, Analytics } from './types';
 import { seedProducts, defaultSettings } from './seed';
 import { fetchAllProducts } from './supabase';
 import { AppLoader } from '../components/AppLoader';
+
 interface StoreState {
   products: Product[];
   settings: Settings;
@@ -45,11 +46,51 @@ interface StoreContextType extends StoreState {
   logout: () => void;
   trackWhatsAppClick: (productId: string) => void;
 }
+
 const StoreContext = createContext<StoreContextType | undefined>(undefined);
 const STORAGE_KEY = 'minirevvz_store_v3';
 const LEGACY_STORAGE_KEY = 'minirevvz_store_v2';
 
 const MIN_LOADER_MS = 1400;
+
+// Debounced persistence - only writes to localStorage when no updates for 2 seconds
+function useDebouncedSave(state: StoreState, delay = 2000) {
+  const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const latestState = useRef(state);
+  latestState.current = state;
+
+  useEffect(() => {
+    if (timerRef.current) {
+      clearTimeout(timerRef.current);
+    }
+    timerRef.current = setTimeout(() => {
+      try {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(latestState.current));
+      } catch (e) {
+        console.warn('Failed to persist store to localStorage:', e);
+      }
+    }, delay);
+
+    return () => {
+      if (timerRef.current) {
+        clearTimeout(timerRef.current);
+      }
+    };
+  }, [state, delay]);
+
+  // Save immediately on page unload (captures latest state)
+  useEffect(() => {
+    const handleBeforeUnload = () => {
+      try {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(latestState.current));
+      } catch (e) {
+        // Silently fail on unload
+      }
+    };
+    window.addEventListener('beforeunload', handleBeforeUnload);
+    return () => window.removeEventListener('beforeunload', handleBeforeUnload);
+  }, []);
+}
 
 export function StoreProvider({ children }: {children: ReactNode;}) {
   const [isInitializing, setIsInitializing] = useState(true);
@@ -90,6 +131,9 @@ export function StoreProvider({ children }: {children: ReactNode;}) {
     };
   });
 
+  // Debounced persistence
+  useDebouncedSave(state);
+
   // Fetch products from Supabase on mount
   useEffect(() => {
     const startedAt = Date.now();
@@ -115,11 +159,7 @@ export function StoreProvider({ children }: {children: ReactNode;}) {
     loadSupabaseProducts();
   }, []);
 
-  // Persist state changes
-  useEffect(() => {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
-  }, [state]);
-  const addProduct = (productData: Omit<Product, 'id' | 'createdAt'> | Product) => {
+  const addProduct = useCallback((productData: Omit<Product, 'id' | 'createdAt'> | Product) => {
     const newProduct: Product = 'id' in productData && 'createdAt' in productData
       ? { ...productData, isVisible: productData.isVisible === true }
       : {
@@ -132,14 +172,13 @@ export function StoreProvider({ children }: {children: ReactNode;}) {
       ...prev,
       products: [newProduct, ...prev.products]
     }));
-  };
+  }, []);
 
-  const updateProduct = (id: string, updates: Partial<Product> | any) => {
+  const updateProduct = useCallback((id: string, updates: Partial<Product> | any) => {
     setState((prev) => ({
       ...prev,
       products: prev.products.map((p) => {
         if (p.id === id) {
-          // Handle both camelCase (from form) and snake_case (from Supabase)
           const converted: Partial<Product> = {
             shortDescription: updates.short_description || updates.shortDescription,
             packagingCondition: updates.packaging_condition || updates.packagingCondition,
@@ -160,8 +199,9 @@ export function StoreProvider({ children }: {children: ReactNode;}) {
         return p;
       })
     }));
-  };
-  const setProductVisibility = (id: string, isVisible: boolean) => {
+  }, []);
+
+  const setProductVisibility = useCallback((id: string, isVisible: boolean) => {
     setState((prev) => ({
       ...prev,
       visibilityOverrides: {
@@ -172,16 +212,16 @@ export function StoreProvider({ children }: {children: ReactNode;}) {
         product.id === id ? { ...product, isVisible } : product
       )
     }));
-  };
+  }, []);
 
-  const clearVisibilityOverride = (id: string) => {
+  const clearVisibilityOverride = useCallback((id: string) => {
     setState((prev) => {
       const { [id]: _, ...visibilityOverrides } = prev.visibilityOverrides;
       return { ...prev, visibilityOverrides };
     });
-  };
+  }, []);
 
-  const deleteProduct = (id: string) => {
+  const deleteProduct = useCallback((id: string) => {
     setState((prev) => {
       const { [id]: _, ...visibilityOverrides } = prev.visibilityOverrides;
       return {
@@ -190,8 +230,9 @@ export function StoreProvider({ children }: {children: ReactNode;}) {
         products: prev.products.filter((p) => p.id !== id)
       };
     });
-  };
-  const updateSettings = (updates: Partial<Settings>) => {
+  }, []);
+
+  const updateSettings = useCallback((updates: Partial<Settings>) => {
     setState((prev) => ({
       ...prev,
       settings: {
@@ -199,15 +240,16 @@ export function StoreProvider({ children }: {children: ReactNode;}) {
         ...updates
       }
     }));
-  };
-  const setSeller = (seller: SellerAccount | null) => {
+  }, []);
+
+  const setSeller = useCallback((seller: SellerAccount | null) => {
     setState((prev) => ({
       ...prev,
       seller
     }));
-  };
-  const login = (email: string, password?: string) => {
-    // Prototype fallback when Supabase is not configured
+  }, []);
+
+  const login = useCallback((email: string, password?: string) => {
     if (email) {
       setState((prev) => ({
         ...prev,
@@ -219,14 +261,16 @@ export function StoreProvider({ children }: {children: ReactNode;}) {
       return true;
     }
     return false;
-  };
-  const logout = () => {
+  }, []);
+
+  const logout = useCallback(() => {
     setState((prev) => ({
       ...prev,
       seller: null
     }));
-  };
-  const trackWhatsAppClick = (productId: string) => {
+  }, []);
+
+  const trackWhatsAppClick = useCallback((productId: string) => {
     setState((prev) => ({
       ...prev,
       analytics: {
@@ -237,28 +281,31 @@ export function StoreProvider({ children }: {children: ReactNode;}) {
         }
       }
     }));
-  };
+  }, []);
+
+  // Memoize context value to prevent re-renders of all consumers
+  const contextValue = useMemo<StoreContextType>(() => ({
+    ...state,
+    isInitializing,
+    addProduct,
+    updateProduct,
+    setProductVisibility,
+    clearVisibilityOverride,
+    deleteProduct,
+    updateSettings,
+    setSeller,
+    login,
+    logout,
+    trackWhatsAppClick
+  }), [state, isInitializing, addProduct, updateProduct, setProductVisibility, clearVisibilityOverride, deleteProduct, updateSettings, setSeller, login, logout, trackWhatsAppClick]);
+
   return (
-    <StoreContext.Provider
-      value={{
-        ...state,
-        isInitializing,
-        addProduct,
-        updateProduct,
-        setProductVisibility,
-        clearVisibilityOverride,
-        deleteProduct,
-        updateSettings,
-        setSeller,
-        login,
-        logout,
-        trackWhatsAppClick
-      }}>
+    <StoreContext.Provider value={contextValue}>
       <AppLoader isLoading={isInitializing} />
       {children}
     </StoreContext.Provider>);
-
 }
+
 export function useStore() {
   const context = useContext(StoreContext);
   if (context === undefined) {
