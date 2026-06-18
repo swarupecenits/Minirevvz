@@ -1,7 +1,7 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { ArrowLeft, ShieldCheck, Truck, ChevronRight } from 'lucide-react';
+import { ArrowLeft, ShieldCheck, Truck, ChevronRight, ShoppingCart } from 'lucide-react';
 import { WhatsAppIcon } from '../components/icons/WhatsAppIcon';
 import { CheckoutForm } from '../components/CheckoutForm';
 import { CheckoutConfirmation } from '../components/CheckoutConfirmation';
@@ -16,7 +16,7 @@ import { CheckoutFormData, Order } from '../lib/orderTypes';
 export function ProductDetail() {
   const { id } = useParams();
   const navigate = useNavigate();
-  const { products, settings, trackWhatsAppClick } = useStore();
+  const { products, settings, trackWhatsAppClick, addToCart, cart } = useStore();
   const product = products.find((p) => p.id === id && isProductPublic(p));
   const [activeImage, setActiveImage] = useState(0);
 
@@ -31,6 +31,17 @@ export function ProductDetail() {
     window.scrollTo(0, 0);
   }, [id]);
 
+  const cartItem = cart.find((item) => item.productId === product?.id);
+  const inCartQuantity = cartItem?.quantity ?? 0;
+  const isSoldOut = product ? product.quantity === 0 : true;
+  const canAddMore = !isSoldOut && product && inCartQuantity < product.quantity;
+
+  const handleAddToCart = useCallback(() => {
+    if (canAddMore && product) {
+      addToCart(product, 1);
+    }
+  }, [addToCart, product, canAddMore]);
+
   if (!product) {
     return (
       <div className="min-h-screen pt-32 flex flex-col items-center justify-center">
@@ -41,8 +52,6 @@ export function ProductDetail() {
       </div>
     );
   }
-
-  const isSoldOut = product.quantity === 0;
 
   const handleBuyClick = () => {
     if (isSoldOut) {
@@ -331,6 +340,27 @@ export function ProductDetail() {
           </div>
 
           <div className="mt-auto space-y-4">
+            {!isSoldOut && (
+              <button
+                onClick={handleAddToCart}
+                disabled={!canAddMore}
+                className={`w-full flex items-center justify-center gap-2 h-auto min-h-12 py-3 px-4 rounded-xl text-sm sm:text-base font-medium transition-all duration-300 ${
+                  canAddMore
+                    ? 'bg-zinc-800 text-zinc-100 hover:bg-zinc-700 border border-white/10 hover:border-white/20'
+                    : inCartQuantity > 0
+                      ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 cursor-default'
+                      : 'bg-zinc-800/50 text-zinc-500 border border-white/5 cursor-not-allowed'
+                }`}
+                aria-label="Add to cart"
+              >
+                <ShoppingCart className="w-5 h-5 shrink-0" />
+                <span>
+                  {inCartQuantity > 0
+                    ? `${inCartQuantity} in Cart${canAddMore ? ' - Add More' : ''}`
+                    : 'Add to Cart'}
+                </span>
+              </button>
+            )}
             <Button
               size="lg"
               variant={isSoldOut ? 'outline' : 'primary'}
@@ -359,7 +389,7 @@ export function ProductDetail() {
             <p className="text-center text-sm text-zinc-500">
               {isSoldOut
                 ? 'This item is currently sold out. Contact us on WhatsApp for inquiries.'
-                : 'Fill in your details and confirm your order. Then proceed to payment on WhatsApp.'}
+                : 'Add to cart to save for later, or Buy Now to complete your purchase.'}
             </p>
             {orderError && (
               <div className="p-3 rounded-lg bg-red-500/10 border border-red-500/20 text-red-400 text-sm">

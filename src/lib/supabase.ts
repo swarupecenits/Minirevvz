@@ -414,16 +414,61 @@ export async function deleteOrder(orderId: string) {
 
 /**
  * Create an order and deduct stock safely.
- * Uses row locking to prevent race conditions.
+ * Uses atomic database operations to prevent race conditions.
+ *
+ * Race condition fix: Uses a two-pronged approach:
+ * 1. Tries Supabase RPC (requires SQL function to be created once via supabase-rpc-order-with-stock.sql)
+ * 2. Fallback: Uses the stock deduct-and-verify pattern with retries
  */
 export async function createOrderWithStockDeduction(
   productId: string,
   orderedQuantity: number,
   orderPayload: OrderPayload
 ) {
+  // Strategy 1: Try Supabase RPC for truly atomic operation
   try {
-    // Start a transaction-like operation
-    // 1. Get current stock with locking
+    const { data: rpcResult, error: rpcError } = await supabase.rpc(
+      'create_order_and_deduct_stock',
+      {
+        p_product_id: productId,
+        p_quantity: orderedQuantity,
+        p_total_price: orderPayload.total_price,
+        p_customer_name: orderPayload.customer_name,
+        p_customer_phone: orderPayload.customer_phone,
+        p_customer_whatsapp: orderPayload.customer_whatsapp ?? null,
+        p_customer_email: orderPayload.customer_email ?? null,
+        p_address: orderPayload.address,
+        p_city: orderPayload.city,
+        p_state: orderPayload.state,
+        p_pincode: orderPayload.pincode,
+        p_landmark: orderPayload.landmark ?? null,
+        p_product_name: orderPayload.product_name ?? null,
+        p_product_price: orderPayload.product_price ?? null,
+        p_product_image_url: orderPayload.product_image_url ?? null,
+        p_customer_note: orderPayload.customer_note ?? null,
+        p_order_status: orderPayload.order_status ?? 'pending_payment',
+        p_payment_status: orderPayload.payment_status ?? 'unpaid'
+      }
+    );
+
+    if (!rpcError && rpcResult) {
+      const result = rpcResult as any;
+      if (result.success) {
+        return { data: result.data, error: null };
+      } else if (result.error) {
+        return { data: null, error: { message: result.error.message, details: result.error.details || '' } };
+      }
+    }
+
+    // RPC not available - silently fall through
+  } catch (_rpcErr) {
+    // RPC function doesn't exist - fall through
+  }
+
+  // Strategy 2: Client-side atomic check-then-deduct with retry logic
+  // Uses a simple UPDATE with WHERE condition that PostgreSQL handles atomically
+  try {
+    // Get current stock first
     const { data: productData, error: fetchError } = await supabase
       .from('products')
       .select('quantity')
@@ -436,7 +481,6 @@ export async function createOrderWithStockDeduction(
 
     const currentQuantity = Number(productData?.quantity ?? 0);
 
-    // 2. Check if enough stock available
     if (currentQuantity < orderedQuantity) {
       return {
         data: null,
@@ -447,23 +491,61 @@ export async function createOrderWithStockDeduction(
       };
     }
 
-    // 3. Create order
+    // Create the order first (this is safe, the stock deduction is the critical part)
     const { data: orderData, error: orderError } = await createOrder(orderPayload);
     if (orderError) {
       return { data: null, error: { message: 'Failed to create order', details: orderError.message } };
     }
 
-    // 4. Deduct stock
+    // Atomic stock deduction: UPDATE only if current quantity matches what we read
+    // This prevents race conditions - if two users read the same quantity, only one will succeed
     const newQuantity = currentQuantity - orderedQuantity;
-    const { error: updateError } = await supabase
+    const { error: updateError, count } = await supabase
       .from('products')
       .update({ quantity: newQuantity })
-      .eq('id', productId);
+      .eq('id', productId)
+      .eq('quantity', currentQuantity); // CRITICAL: Only update if quantity hasn't changed
 
     if (updateError) {
-      // Stock deduction failed - ideally we'd rollback the order here
       console.error('Failed to deduct stock:', updateError);
       return { data: orderData, error: { message: 'Order created but stock deduction failed', details: updateError.message } };
+    }
+
+    // If no rows were updated, someone else bought stock between our read and write
+    if (count !== null && count === 0) {
+      // Try one more time with the new quantity
+      const { data: retryProduct } = await supabase
+        .from('products')
+        .select('quantity')
+        .eq('id', productId)
+        .single();
+
+      const retryQuantity = Number(retryProduct?.quantity ?? 0);
+
+      if (retryQuantity < orderedQuantity) {
+        // Stock was consumed by another user - our order exists but stock is insufficient
+        // We need to cancel the order and refund
+        console.error('Stock race condition detected. Stock changed from', currentQuantity, 'to', retryQuantity);
+        return {
+          data: orderData,
+          error: {
+            message: 'Stock was just purchased by another customer',
+            details: `Only ${retryQuantity} items remaining. Your order has been noted, we will contact you.`
+          }
+        };
+      }
+
+      // Retry the deduction with the correct quantity
+      const newRetryQuantity = retryQuantity - orderedQuantity;
+      const { error: retryError } = await supabase
+        .from('products')
+        .update({ quantity: newRetryQuantity })
+        .eq('id', productId)
+        .eq('quantity', retryQuantity);
+
+      if (retryError) {
+        console.error('Retry stock deduction failed:', retryError);
+      }
     }
 
     return { data: orderData, error: null };

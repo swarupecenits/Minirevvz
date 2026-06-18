@@ -12,6 +12,7 @@ const Home = lazy(() => import('./pages/Home').then(m => ({ default: m.Home })))
 const Products = lazy(() => import('./pages/Products').then(m => ({ default: m.Products })));
 const ProductDetail = lazy(() => import('./pages/ProductDetail').then(m => ({ default: m.ProductDetail })));
 const Checkout = lazy(() => import('./pages/Checkout').then(m => ({ default: m.Checkout })));
+const CartCheckout = lazy(() => import('./pages/CartCheckout').then(m => ({ default: m.CartCheckout })));
 const About = lazy(() => import('./pages/About').then(m => ({ default: m.About })));
 const Contact = lazy(() => import('./pages/Contact').then(m => ({ default: m.Contact })));
 const SaleSets = lazy(() => import('./pages/SaleSets').then(m => ({ default: m.SaleSets })));
@@ -83,6 +84,7 @@ export function App() {
 
             {/* Checkout */}
             <Route path="/checkout/:id" element={<Checkout />} />
+            <Route path="/checkout/cart" element={<CartCheckout />} />
 
             {/* Auth */}
             <Route path="/login" element={<Login />} />
