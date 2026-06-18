@@ -3,13 +3,15 @@ import { Outlet, Link, useLocation } from 'react-router-dom';
 import { BRAND_NAME } from '../../lib/constants';
 import logo from '../../assets/logo.png';
 import { useStore } from '../../lib/store';
-import { Menu, X, Instagram, Mail, MapPin } from 'lucide-react';
+import { Menu, X, Instagram, Mail, MapPin, ShoppingBag } from 'lucide-react';
 import { WhatsAppIcon } from '../icons/WhatsAppIcon';
 import { buildWhatsAppUrl } from '../../lib/whatsapp';
+import { CartDrawer } from '../CartDrawer';
 export function PublicLayout() {
   const [isScrolled, setIsScrolled] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-  const { settings } = useStore();
+  const [cartOpen, setCartOpen] = useState(false);
+  const { settings, cartCount } = useStore();
   const location = useLocation();
   useEffect(() => {
     const handleScroll = () => {
@@ -82,13 +84,30 @@ export function PublicLayout() {
             )}
           </nav>
 
-          {/* Mobile Menu Toggle */}
-          <button
-            className="md:hidden text-zinc-100 p-2"
-            onClick={() => setMobileMenuOpen(!mobileMenuOpen)}>
-            
-            {mobileMenuOpen ? <X /> : <Menu />}
-          </button>
+          {/* Right section: Cart + Mobile Menu Toggle */}
+          <div className="flex items-center gap-2">
+            {/* Cart Button */}
+            <button
+              onClick={() => setCartOpen(true)}
+              className="relative p-2 text-zinc-400 hover:text-zinc-100 hover:bg-white/5 rounded-lg transition-colors"
+              aria-label="Open cart"
+            >
+              <ShoppingBag className="w-5 h-5" />
+              {cartCount > 0 && (
+                <span className="absolute -top-0.5 -right-0.5 bg-amber-500 text-zinc-900 text-[10px] font-bold w-4.5 h-4.5 min-w-[18px] min-h-[18px] rounded-full flex items-center justify-center">
+                  {cartCount > 99 ? '99+' : cartCount}
+                </span>
+              )}
+            </button>
+
+            {/* Mobile Menu Toggle */}
+            <button
+              className="md:hidden text-zinc-100 p-2"
+              onClick={() => setMobileMenuOpen(!mobileMenuOpen)}>
+              
+              {mobileMenuOpen ? <X /> : <Menu />}
+            </button>
+          </div>
         </div>
       </header>
 
@@ -186,6 +205,9 @@ export function PublicLayout() {
           </div>
         </div>
       </footer>
+
+      {/* Cart Drawer */}
+      <CartDrawer isOpen={cartOpen} onClose={() => setCartOpen(false)} />
 
       {/* Floating WhatsApp Button */}
       <button

@@ -1,6 +1,6 @@
-import React, { useState, useEffect, useCallback, useRef } from 'react';
+import React, { useState, useEffect, useCallback, useRef, useMemo } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { ArrowLeft, ChevronRight } from 'lucide-react';
+import { ArrowLeft, ChevronRight, Truck } from 'lucide-react';
 import { Button } from '../components/ui/Button';
 import { useStore } from '../lib/store';
 import { isProductPublic } from '../lib/types';
@@ -8,6 +8,7 @@ import { createOrderWithStockDeduction } from '../lib/supabase';
 import { buildWhatsAppUrl, getOrderConfirmationMessage } from '../lib/whatsapp';
 import { CheckoutFormData, Order } from '../lib/orderTypes';
 import { validateCheckoutForm } from '../lib/orderValidation';
+import { calculateShipping, getShippingLabel } from '../lib/shipping';
 
 // --- Reusable uncontrolled InputField (top-level, no nested components) ---
 
@@ -266,6 +267,8 @@ interface CheckoutConfirmationComponentProps {
   onEdit: () => void;
   isLoading: boolean;
   orderError: string;
+  shipping: number;
+  shippingLabel: string;
 }
 
 function CheckoutConfirmationComponent({
@@ -274,9 +277,12 @@ function CheckoutConfirmationComponent({
   onConfirm,
   onEdit,
   isLoading,
-  orderError
+  orderError,
+  shipping,
+  shippingLabel
 }: CheckoutConfirmationComponentProps) {
   const totalPrice = product.price * formData.quantity;
+  const grandTotal = totalPrice + shipping;
 
   return (
     <div className="space-y-6">
@@ -297,9 +303,16 @@ function CheckoutConfirmationComponent({
             <p className="text-zinc-100 font-semibold">{formData.quantity}x</p>
           </div>
 
+          <div className="flex justify-between items-center text-sm pt-2 border-t border-white/10">
+            <p className="text-zinc-400 flex items-center gap-1.5">
+              <Truck className="w-3.5 h-3.5" />
+              {shippingLabel}
+            </p>
+            <p className="text-zinc-100 font-medium">₹{shipping.toLocaleString('en-IN')}</p>
+          </div>
           <div className="flex justify-between items-center pt-4">
-            <p className="text-lg font-semibold text-zinc-100">Total Price</p>
-            <p className="text-2xl font-bold text-emerald-400">₹{totalPrice.toLocaleString('en-IN')}</p>
+            <p className="text-lg font-semibold text-zinc-100">Grand Total</p>
+            <p className="text-2xl font-bold text-amber-400">₹{grandTotal.toLocaleString('en-IN')}</p>
           </div>
         </div>
       </div>
@@ -397,6 +410,11 @@ export function Checkout() {
   const [checkoutFormData, setCheckoutFormData] = useState<CheckoutFormData | null>(null);
   const [isCreatingOrder, setIsCreatingOrder] = useState(false);
   const [orderError, setOrderError] = useState<string>('');
+
+  // Shipping: quantity from form data or default 1
+  const formQuantity = checkoutFormData?.quantity ?? 1;
+  const shipping = useMemo(() => calculateShipping(formQuantity), [formQuantity]);
+  const shippingLabel = useMemo(() => getShippingLabel(formQuantity), [formQuantity]);
 
   useEffect(() => {
     window.scrollTo(0, 0);
@@ -504,7 +522,33 @@ export function Checkout() {
         updatedAt: new Date().toISOString()
       };
 
-      const message = getOrderConfirmationMessage(order);
+      // Build WhatsApp message with shipping info
+      const lines: string[] = [];
+      lines.push(`Hello! I have placed an order on your website.`);
+      lines.push(``);
+      lines.push(`Order ID: ${order.id}`);
+      lines.push(`Product: ${order.productName}`);
+      lines.push(`Quantity: ${order.quantity}`);
+      lines.push(`Unit Price: ₹${order.productPrice.toLocaleString('en-IN')}`);
+      lines.push(`Total: ₹${order.totalPrice.toLocaleString('en-IN')}`);
+      lines.push(`Shipping: ₹${shipping.toLocaleString('en-IN')}`);
+      lines.push(`Grand Total: ₹${totalPrice + shipping}`);
+      lines.push(``);
+      lines.push(`Customer Details:`);
+      lines.push(`Name: ${order.customerName}`);
+      lines.push(`Phone: ${order.customerPhone}`);
+      if (order.customerWhatsapp) lines.push(`WhatsApp: ${order.customerWhatsapp}`);
+      if (order.customerEmail) lines.push(`Email: ${order.customerEmail}`);
+      const fullAddress = `${order.address}, ${order.city}, ${order.state} - ${order.pincode}${order.landmark ? `, Near ${order.landmark}` : ''}`;
+      lines.push(`Address: ${fullAddress}`);
+      lines.push(``);
+      lines.push(`Order Status: ${order.orderStatus}`);
+      lines.push(`Payment Status: ${order.paymentStatus}`);
+      if (order.customerNote) lines.push(`\nSpecial Notes: ${order.customerNote}`);
+      lines.push(``);
+      lines.push('I would like to complete the payment for this order.');
+
+      const message = lines.join('\n');
       const url = buildWhatsAppUrl(settings.whatsappNumber, message);
 
       window.location.href = url;
@@ -567,6 +611,27 @@ export function Checkout() {
             </div>
           </div>
         </div>
+
+        {/* Price Breakdown - shows once form data is available */}
+        {checkoutFormData && (
+          <div className="mt-4 pt-4 border-t border-white/10 space-y-2">
+            <div className="flex justify-between items-center text-sm">
+              <span className="text-zinc-400">Subtotal ({checkoutFormData.quantity} {checkoutFormData.quantity === 1 ? 'item' : 'items'})</span>
+              <span className="font-semibold text-zinc-100">₹{(product.price * checkoutFormData.quantity).toLocaleString('en-IN')}</span>
+            </div>
+            <div className="flex justify-between items-center text-sm">
+              <span className="text-zinc-400 flex items-center gap-1.5">
+                <Truck className="w-3.5 h-3.5" />
+                {shippingLabel}
+              </span>
+              <span className="font-semibold text-zinc-100">₹{shipping.toLocaleString('en-IN')}</span>
+            </div>
+            <div className="flex justify-between items-center pt-2 border-t border-white/10">
+              <span className="text-zinc-100 font-semibold">Grand Total</span>
+              <span className="text-xl font-bold text-amber-400">₹{(product.price * checkoutFormData.quantity + shipping).toLocaleString('en-IN')}</span>
+            </div>
+          </div>
+        )}
       </div>
 
       {/* Checkout Form or Confirmation */}
@@ -583,6 +648,8 @@ export function Checkout() {
           onEdit={handleEditOrder}
           isLoading={isCreatingOrder}
           orderError={orderError}
+          shipping={shipping}
+          shippingLabel={shippingLabel}
         />
       ) : null}
     </div>

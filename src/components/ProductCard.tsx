@@ -1,8 +1,10 @@
-import React from 'react';
+import React, { useCallback } from 'react';
 import { Link } from 'react-router-dom';
+import { ShoppingCart } from 'lucide-react';
 import { Product } from '../lib/types';
 import { Badge } from './ui/Badge';
 import { Button } from './ui/Button';
+import { useStore } from '../lib/store';
 
 interface ProductCardProps {
   product: Product;
@@ -10,6 +12,18 @@ interface ProductCardProps {
 
 export const ProductCard = React.memo(function ProductCard({ product }: ProductCardProps) {
   const isSoldOut = product.quantity === 0;
+  const { addToCart, cart } = useStore();
+  const cartItem = cart.find((item) => item.productId === product.id);
+  const inCartQuantity = cartItem?.quantity ?? 0;
+  const canAddMore = !isSoldOut && inCartQuantity < product.quantity;
+
+  const handleAddToCart = useCallback((e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (canAddMore) {
+      addToCart(product, 1);
+    }
+  }, [addToCart, product, canAddMore]);
 
   return (
     <div className="group flex flex-col rounded-2xl overflow-hidden border border-white/10 bg-gradient-to-b from-zinc-900/90 to-zinc-950 shadow-lg transition-all duration-500 hover:-translate-y-1.5 hover:border-white/20 hover:shadow-[0_24px_48px_-16px_rgba(0,0,0,0.65)]">
@@ -68,10 +82,30 @@ export const ProductCard = React.memo(function ProductCard({ product }: ProductC
         </div>
       </Link>
 
-      <div className="px-3.5 sm:px-4 pb-3.5 sm:pb-4">
+      <div className="px-3.5 sm:px-4 pb-3.5 sm:pb-4 flex gap-2">
+        {!isSoldOut && (
+          <button
+            onClick={handleAddToCart}
+            disabled={!canAddMore}
+            className={`flex items-center justify-center gap-1.5 h-9 px-3 rounded-xl text-xs sm:text-sm font-medium transition-all duration-300 ${
+              canAddMore
+                ? 'bg-zinc-800 text-zinc-100 hover:bg-zinc-700 border border-white/10 hover:border-white/20'
+                : inCartQuantity > 0
+                  ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 cursor-default'
+                  : 'bg-zinc-800/50 text-zinc-500 border border-white/5 cursor-not-allowed'
+            }`}
+            aria-label={canAddMore ? `Add ${product.name} to cart` : 'Item in cart'}
+          >
+            <ShoppingCart className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+            <span>
+              {inCartQuantity > 0 ? `${inCartQuantity} in Cart` : 'Add'}
+            </span>
+          </button>
+        )}
         <Link
           to={`/checkout/${product.id}`}
           onClick={(e) => e.stopPropagation()}
+          className="flex-1"
         >
           <Button
             variant="primary"

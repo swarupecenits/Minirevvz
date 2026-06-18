@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useCallback, useRef, createContext, useContext, ReactNode, useMemo } from 'react';
-import { Product, Settings, SellerAccount, Analytics } from './types';
+import { Product, Settings, SellerAccount, Analytics, CartItem } from './types';
 import { seedProducts, defaultSettings } from './seed';
 import { fetchAllProducts } from './supabase';
 import { AppLoader } from '../components/AppLoader';
@@ -10,6 +10,7 @@ interface StoreState {
   seller: SellerAccount | null;
   analytics: Analytics;
   visibilityOverrides: Record<string, boolean>;
+  cart: CartItem[];
 }
 
 function resolveProductVisibility(
@@ -45,6 +46,13 @@ interface StoreContextType extends StoreState {
   login: (email: string, password?: string) => boolean;
   logout: () => void;
   trackWhatsAppClick: (productId: string) => void;
+  // Cart actions
+  addToCart: (product: Product, quantity?: number) => void;
+  removeFromCart: (productId: string) => void;
+  updateCartItemQuantity: (productId: string, quantity: number) => void;
+  clearCart: () => void;
+  cartTotal: number;
+  cartCount: number;
 }
 
 const StoreContext = createContext<StoreContextType | undefined>(undefined);
@@ -114,7 +122,8 @@ export function StoreProvider({ children }: {children: ReactNode;}) {
           settings: parsed.settings ?? defaultSettings,
           seller: parsed.seller ?? null,
           analytics: parsed.analytics ?? { whatsappClicks: {} },
-          visibilityOverrides
+          visibilityOverrides,
+          cart: parsed.cart ?? []
         };
       } catch (e) {
         console.error('Failed to parse store from localStorage', e);
@@ -127,7 +136,8 @@ export function StoreProvider({ children }: {children: ReactNode;}) {
       analytics: {
         whatsappClicks: {}
       },
-      visibilityOverrides: {}
+      visibilityOverrides: {},
+      cart: []
     };
   });
 
@@ -224,10 +234,13 @@ export function StoreProvider({ children }: {children: ReactNode;}) {
   const deleteProduct = useCallback((id: string) => {
     setState((prev) => {
       const { [id]: _, ...visibilityOverrides } = prev.visibilityOverrides;
+      // Also remove from cart if present
+      const cart = prev.cart.filter((item) => item.productId !== id);
       return {
         ...prev,
         visibilityOverrides,
-        products: prev.products.filter((p) => p.id !== id)
+        products: prev.products.filter((p) => p.id !== id),
+        cart
       };
     });
   }, []);
@@ -283,6 +296,67 @@ export function StoreProvider({ children }: {children: ReactNode;}) {
     }));
   }, []);
 
+  // === Cart Actions ===
+
+  const addToCart = useCallback((product: Product, quantity: number = 1) => {
+    if (product.quantity === 0) return; // Cannot add sold out items
+
+    setState((prev) => {
+      const existingIndex = prev.cart.findIndex((item) => item.productId === product.id);
+      let newCart: CartItem[];
+
+      if (existingIndex >= 0) {
+        // Item already in cart - increase quantity (capped by stock)
+        newCart = prev.cart.map((item, idx) => {
+          if (idx === existingIndex) {
+            const newQty = Math.min(item.quantity + quantity, product.quantity);
+            return { ...item, quantity: newQty };
+          }
+          return item;
+        });
+      } else {
+        // New item
+        newCart = [...prev.cart, { productId: product.id, product, quantity: Math.min(quantity, product.quantity) }];
+      }
+
+      return { ...prev, cart: newCart };
+    });
+  }, []);
+
+  const removeFromCart = useCallback((productId: string) => {
+    setState((prev) => ({
+      ...prev,
+      cart: prev.cart.filter((item) => item.productId !== productId)
+    }));
+  }, []);
+
+  const updateCartItemQuantity = useCallback((productId: string, quantity: number) => {
+    setState((prev) => ({
+      ...prev,
+      cart: prev.cart.map((item) => {
+        if (item.productId === productId) {
+          // Clamp quantity between 1 and available stock
+          const clampedQty = Math.max(1, Math.min(quantity, item.product.quantity));
+          return { ...item, quantity: clampedQty };
+        }
+        return item;
+      })
+    }));
+  }, []);
+
+  const clearCart = useCallback(() => {
+    setState((prev) => ({ ...prev, cart: [] }));
+  }, []);
+
+  // Derived values for cart
+  const cartTotal = useMemo(() => {
+    return state.cart.reduce((sum, item) => sum + item.product.price * item.quantity, 0);
+  }, [state.cart]);
+
+  const cartCount = useMemo(() => {
+    return state.cart.reduce((sum, item) => sum + item.quantity, 0);
+  }, [state.cart]);
+
   // Memoize context value to prevent re-renders of all consumers
   const contextValue = useMemo<StoreContextType>(() => ({
     ...state,
@@ -296,8 +370,15 @@ export function StoreProvider({ children }: {children: ReactNode;}) {
     setSeller,
     login,
     logout,
-    trackWhatsAppClick
-  }), [state, isInitializing, addProduct, updateProduct, setProductVisibility, clearVisibilityOverride, deleteProduct, updateSettings, setSeller, login, logout, trackWhatsAppClick]);
+    trackWhatsAppClick,
+    // Cart
+    addToCart,
+    removeFromCart,
+    updateCartItemQuantity,
+    clearCart,
+    cartTotal,
+    cartCount
+  }), [state, isInitializing, addProduct, updateProduct, setProductVisibility, clearVisibilityOverride, deleteProduct, updateSettings, setSeller, login, logout, trackWhatsAppClick, addToCart, removeFromCart, updateCartItemQuantity, clearCart, cartTotal, cartCount]);
 
   return (
     <StoreContext.Provider value={contextValue}>

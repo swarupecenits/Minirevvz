@@ -22,6 +22,12 @@ export interface Product {
   createdAt: string;
 }
 
+export interface CartItem {
+  productId: string;
+  product: Product;
+  quantity: number;
+}
+
 export function isProductPublic(product: Product): boolean {
   return product.isVisible === true;
 }
