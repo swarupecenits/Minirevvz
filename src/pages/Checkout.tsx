@@ -402,7 +402,7 @@ function CheckoutConfirmationComponent({
 export function Checkout() {
   const { id } = useParams();
   const navigate = useNavigate();
-  const { products, settings, trackWhatsAppClick } = useStore();
+  const { products, settings, updateProduct, trackWhatsAppClick } = useStore();
   const product = products.find((p) => p.id === id && isProductPublic(p));
 
   // Checkout state
@@ -494,6 +494,26 @@ export function Checkout() {
       if (!orderData) {
         setOrderError('No order data returned. Please try again.');
         return;
+      }
+
+      // Update local store quantity so public users see the updated stock immediately
+      updateProduct(product.id, { quantity: product.quantity - checkoutFormData.quantity });
+
+      // Immediately persist to localStorage so the update survives the WhatsApp redirect
+      try {
+        const saved = localStorage.getItem('minirevvz_store_v3');
+        if (saved) {
+          const parsed = JSON.parse(saved);
+          parsed.products = parsed.products.map((p: any) => {
+            if (p.id === product.id) {
+              return { ...p, quantity: product.quantity - checkoutFormData.quantity };
+            }
+            return p;
+          });
+          localStorage.setItem('minirevvz_store_v3', JSON.stringify(parsed));
+        }
+      } catch (e) {
+        // Silently fail - store update works without localStorage
       }
 
       trackWhatsAppClick(product.id);

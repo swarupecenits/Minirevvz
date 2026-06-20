@@ -4,10 +4,7 @@
 -- This prevents race conditions when two users buy simultaneously
 -- ============================================================
 
--- First, ensure the orders table has all required columns
--- (run this only if you need to add missing columns)
-
--- Create the RPC function for atomic order + stock deduction
+-- 1. CREATE THE RPC FUNCTION (SECURITY DEFINER bypasses RLS)
 CREATE OR REPLACE FUNCTION create_order_and_deduct_stock(
   p_product_id UUID,
   p_quantity INTEGER,
@@ -37,7 +34,6 @@ DECLARE
   v_current_quantity INTEGER;
   v_new_quantity INTEGER;
   v_order_id UUID;
-  v_order JSONB;
 BEGIN
   -- Lock the product row to prevent concurrent deductions
   SELECT quantity INTO v_current_quantity
@@ -149,5 +145,51 @@ BEGIN
 END;
 $$;
 
--- Grant execute permission to authenticated and anon users
+-- Grant execute to anonymous and authenticated users
 GRANT EXECUTE ON FUNCTION create_order_and_deduct_stock TO anon, authenticated, service_role;
+
+-- ============================================================
+-- 2. SET UP RLS POLICIES FOR PUBLIC/ANONYMOUS USERS
+-- ============================================================
+
+-- Enable RLS on both tables (safe to run even if already enabled)
+ALTER TABLE products ENABLE ROW LEVEL SECURITY;
+ALTER TABLE orders ENABLE ROW LEVEL SECURITY;
+
+-- Allow anonymous users to SELECT products (read catalog)
+DROP POLICY IF EXISTS "anon_can_select_products" ON products;
+CREATE POLICY "anon_can_select_products" ON products
+  FOR SELECT
+  TO anon
+  USING (true);
+
+-- Allow anonymous users to INSERT orders
+DROP POLICY IF EXISTS "anon_can_insert_orders" ON orders;
+CREATE POLICY "anon_can_insert_orders" ON orders
+  FOR INSERT
+  TO anon
+  WITH CHECK (true);
+
+-- Allow anonymous users to UPDATE products (decrease stock)
+DROP POLICY IF EXISTS "anon_can_update_products_quantity" ON products;
+CREATE POLICY "anon_can_update_products_quantity" ON products
+  FOR UPDATE
+  TO anon
+  USING (true)
+  WITH CHECK (true);
+
+-- Allow admin/authenticated users full access to orders
+DROP POLICY IF EXISTS "admin_full_access_orders" ON orders;
+CREATE POLICY "admin_full_access_orders" ON orders
+  FOR ALL
+  TO authenticated
+  USING (true)
+  WITH CHECK (true);
+
+-- Allow admin/authenticated users full access to products
+DROP POLICY IF EXISTS "admin_full_access_products" ON products;
+CREATE POLICY "admin_full_access_products" ON products
+  FOR ALL
+  TO authenticated
+  USING (true)
+  WITH CHECK (true);

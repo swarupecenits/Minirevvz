@@ -73,7 +73,7 @@ const InputField = React.memo(function InputField({
 
 export function CartCheckout() {
   const navigate = useNavigate();
-  const { cart, cartTotal, cartCount, clearCart, settings, trackWhatsAppClick } = useStore();
+  const { cart, cartTotal, cartCount, clearCart, settings, updateProduct, trackWhatsAppClick } = useStore();
   const shipping = useMemo(() => calculateShipping(cartCount), [cartCount]);
   const grandTotal = useMemo(() => cartTotal + shipping, [cartTotal, shipping]);
 
@@ -199,6 +199,26 @@ export function CartCheckout() {
 
         if (!orderData) {
           throw new Error(`No order data returned for ${cartItem.product.name}`);
+        }
+
+        // Update local store quantity for public users
+        updateProduct(cartItem.productId, { quantity: cartItem.product.quantity - cartItem.quantity });
+
+        // Immediately persist to localStorage so updates survive the WhatsApp redirect
+        try {
+          const saved = localStorage.getItem('minirevvz_store_v3');
+          if (saved) {
+            const parsed = JSON.parse(saved);
+            parsed.products = parsed.products.map((p: any) => {
+              if (p.id === cartItem.productId) {
+                return { ...p, quantity: cartItem.product.quantity - cartItem.quantity };
+              }
+              return p;
+            });
+            localStorage.setItem('minirevvz_store_v3', JSON.stringify(parsed));
+          }
+        } catch (e) {
+          // Silently fail
         }
 
         trackWhatsAppClick(cartItem.productId);
